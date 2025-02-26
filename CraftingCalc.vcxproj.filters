@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="recipesManager.cpp">
+      <Filter>Recipes</Filter>
+    </ClCompile>
+    <ClCompile Include="app.cpp" />
+    <ClCompile Include="libs\ui\imgui.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\ui\imgui_demo.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\ui\imgui_draw.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\ui\imgui_impl_glfw.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\ui\imgui_impl_opengl3.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\ui\imgui_tables.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="libs\ui\imgui_widgets.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="recipeParser.cpp">
+      <Filter>Recipes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="recipesManager.h">
+      <Filter>Recipes</Filter>
+    </ClInclude>
+    <ClInclude Include="app.h" />
+    <ClInclude Include="libs\ui\imconfig.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imgui.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imgui_impl_glfw.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imgui_impl_opengl3.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imgui_impl_opengl3_loader.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imgui_internal.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imstb_rectpack.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imstb_textedit.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\ui\imstb_truetype.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="libs\json\json.hpp">
+      <Filter>Recipes</Filter>
+    </ClInclude>
+    <ClInclude Include="recipeParser.h">
+      <Filter>Recipes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Recipes">
+      <UniqueIdentifier>{4116bfba-93f6-4b33-9ded-874e40ef8e77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{a2687169-cadd-4cb4-871d-bf2080e79062}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
+  </ItemGroup>
+</Project>
