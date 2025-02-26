@@ -37,6 +37,7 @@ namespace p95
 		ImFont* m_fontFooter;
 
 		std::string m_appTitle;
+		std::string m_version;
 
 		bool m_dbgMode;
 

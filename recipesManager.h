@@ -18,14 +18,14 @@ namespace p95
 	};
 
 
-	class RecipeRegistry
+	class RecipeManager
 	{
 	public:
 
 		static void loadJar(const char* path);
 
 		static void clear();
-		static size_t count();
+		static int count();
 		static RecipeRaw getRaw(int idx);
 		static RecipeRaw getRaw(const char* name);
 
@@ -36,7 +36,7 @@ namespace p95
 
 
 	private:
-		static std::vector<RecipeRaw> s_recipesRaw;
+		static std::vector<RecipeRaw> m_recipesRaw;
 	};
 }
 

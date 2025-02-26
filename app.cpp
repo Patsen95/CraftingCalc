@@ -45,21 +45,25 @@ namespace p95
 		Below you can add any *.jar path and application will automatically find and load recipes.\n\
 		For vanilla version of Minecraft(without any mods / modloaders)";
 
-	// DEBUG
-	static RecipeRaw _rec;
 
-	/*********************************************************************/
+	/**************************** DEBUG STUFF ****************************/
+#ifdef _DEBUG
 	static void glfw_error_callback(int error, const char* description)
 	{
-#ifdef _DEBUG
 		fprintf(stderr, "GLFW Error %d: %s\n", error, description);
-#endif
 	}
+
+	static int _currentSelectionIdx = 0;
+#else
+	static void glfw_error_callback(int error, const char* description) {}
+#endif
+
 
 #ifdef _WIN32
 	INT CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lp, LPARAM pData)
 	{
-		if(uMsg == BFFM_INITIALIZED) SendMessage(hwnd, BFFM_SETSELECTION, TRUE, pData);
+		if(uMsg == BFFM_INITIALIZED)
+			SendMessage(hwnd, BFFM_SETSELECTION, TRUE, pData);
 		return 0;
 	}
 #endif
@@ -73,29 +77,17 @@ namespace p95
 		m_frameBufHeight = 0;
 		m_clearColor = ImVec4();
 		m_uiStyle = nullptr;
-		m_appTitle = "Crafting Calc";
 		m_fontMain = nullptr;
 		m_fontMedium = nullptr;
 		m_fontFooter = nullptr;
 		m_dbgMode = false;
+		m_version = "0.1";
 
-		_rec.m_content = "{\n\
-				\"type\": \"minecraft:crafting_shaped\",\n\
-				\"key\" : {\n\
-				\"#\": {\n\
-					\"item\": \"minecraft:deepslate_tiles\"\n\
-				}\n\
-			},\n\
-				\"pattern\" : [\n\
-						\"#  \",\n\
-						\"## \",\n\
-						\"###\"\n\
-				] ,\n\
-				\"result\" : {\n\
-				\"count\": 4,\n\
-					\"item\" : \"minecraft:deepslate_tile_stairs\"\n\
-			}\n\
-		}";
+#ifdef _DEBUG
+		m_appTitle = "Crafting Calc [DEBUG]";
+#else
+		m_appTitle = std::string("Crafting Calc") + " v" + m_version;
+#endif
 	}
 
 	App::~App()
@@ -118,6 +110,7 @@ namespace p95
 		m_window = glfwCreateWindow(m_windowSize.x, m_windowSize.y, m_appTitle.c_str(), nullptr, nullptr);
 		if(m_window == nullptr)
 			return 1;
+
 		glfwMakeContextCurrent(m_window);
 		glfwSwapInterval(1); // VSync
 
@@ -208,6 +201,8 @@ namespace p95
 		glfwTerminate();
 		m_window = nullptr;
 		m_io = nullptr;
+
+		RecipeManager::clear();
 	}
 
 	/****************************************************************************/
@@ -266,11 +261,13 @@ namespace p95
 						imgui::SetCursorPos(ImVec2(53, imgui::GetCursorPos().y));
 						if(imgui::Button("Add source...", SIZE_BTN_ADD))
 						{
+							RecipeManager::loadJar(NULL);
+
 							// TODO: Show OpenFolderBrowser to select jars
-							if(showWindowAddSource())
+							/*if(showWindowAddSource())
 							{
 
-							}
+							}*/
 						}
 					}
 					imgui::EndGroup();
@@ -282,16 +279,43 @@ namespace p95
 					imgui::SetCursorPos(ImVec2(15, imgui::GetCursorPos().y));
 					imgui::BeginGroup();
 					{
-						imgui::Text("Sources");
+						int _recCnt = RecipeManager::count();
+						imgui::Text("Sources (%d)", _recCnt);
 						imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x, imgui::GetCursorPos().y + 5));
 						imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_LIST_ITEM_BG);
 						imgui::BeginChild("##ListJars", SIZE_LIST_JARS, ImGuiChildFlags_Border);
 						{
 							imgui::PushStyleColor(ImGuiCol_HeaderHovered, (ImVec4)COL_LIST_ITEM_HOVER);
 							// TODO: Displaying sources as tree
-							//imgui::Checkbox();
-							imgui::PopStyleColor(2);
+							if(_recCnt > 0)
+							{
+#ifdef _DEBUG
+								static ImVector<bool> _selectedNodes;
+								_selectedNodes.resize(_recCnt, false);
+#endif
+								if(imgui::TreeNode("forge-43.4.0")) // FIX: Make label dynamic (if possible)
+								{
+									imgui::Unindent(imgui::GetTreeNodeToLabelSpacing());
+									for(int i = 0; i < _recCnt; i++)
+									{
+#ifdef _DEBUG
+										std::string _filename = RecipeManager::getRaw(i).m_filename;
+										if(imgui::Selectable(_filename.c_str(), _selectedNodes[i]))
+										{
+											memset(_selectedNodes.Data, 0, _selectedNodes.Size);
+											_selectedNodes[i] ^= true;
+											_currentSelectionIdx = i;
+										}
+
+#else
+										imgui::BulletText("%s", _filename.c_str());
+#endif
+									}
+									imgui::TreePop();
+								}
+							}							
 						}
+						imgui::PopStyleColor(2);
 						imgui::EndChild();
 					}
 					imgui::EndGroup();
@@ -376,7 +400,7 @@ namespace p95
 							for(int row = 0; row < 3; row++)
 							{
 								for(int col = 0; col < 3; col++)
-								{
+								{ // FIX: Sizing and positioning, to immitate original crafting grid
 									imgui::SetCursorPos(ImVec2(_gorig.x + ((SIZE_BTN_INPUT_ITEM.x - 1) * col), _gorig.y + ((SIZE_BTN_INPUT_ITEM.y - 1) * row)));
 									imgui::PushID(row * 3 + col);
 									imgui::Button("##gcell", SIZE_BTN_INPUT_ITEM);
@@ -439,11 +463,12 @@ namespace p95
 		imgui::End();
 	}
 
-#ifdef _WIN32
+#ifdef _DEBUG
 	void App::drawDebugUI()
 	{
 		imgui::SetCursorPos(ImVec2());
-		imgui::InputTextMultiline("##src", (char*)_rec.m_content.c_str(), _rec.m_content.length() + 1, imgui::GetContentRegionAvail());
+		RecipeRaw _raw = RecipeManager::getRaw(_currentSelectionIdx);
+		imgui::InputTextMultiline("##src", (char*)_raw.m_content.c_str(), _raw.m_content.length() + 1, imgui::GetContentRegionAvail());
 	}
 #endif
 
