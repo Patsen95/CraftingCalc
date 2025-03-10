@@ -4,5 +4,6 @@ Obj
 CraftingCalc/x64
 x64/Debug
 
-# Filies
+# Files
+*.vcxproj.user
 TODO.txt

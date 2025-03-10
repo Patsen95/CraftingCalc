@@ -86,7 +86,7 @@ namespace p95
 #ifdef _DEBUG
 		m_appTitle = "Crafting Calc [DEBUG]";
 #else
-		m_appTitle = std::string("Crafting Calc") + " v" + m_version;
+		m_appTitle = std::string("Crafting Calc") + " v" + m_version; // Don't judge me...
 #endif
 	}
 
@@ -202,7 +202,7 @@ namespace p95
 		m_window = nullptr;
 		m_io = nullptr;
 
-		RecipeManager::clear();
+		RecipeParser::clear();
 	}
 
 	/****************************************************************************/
@@ -230,9 +230,13 @@ namespace p95
 					imgui::TableNextColumn();
 
 #ifdef _DEBUG
-					/****** DEBUG BUTTON (DEBUG BUILD ONLY) ******/
+					/****** DEBUG BUTTON ******/
 					if(imgui::Button("D", ImVec2(20, 20)))
 						m_dbgMode = !m_dbgMode;
+
+					/****** CLEAR RECIPES ******/
+					if(imgui::Button("C", ImVec2(20, 20)))
+						RecipeParser::clear();
 #endif
 					/****** BUTTONS ******/
 					imgui::SetCursorPos(ImVec2(53, 25));
@@ -261,7 +265,7 @@ namespace p95
 						imgui::SetCursorPos(ImVec2(53, imgui::GetCursorPos().y));
 						if(imgui::Button("Add source...", SIZE_BTN_ADD))
 						{
-							RecipeManager::loadJar(NULL);
+							RecipeParser::loadJar(NULL); // TODO: Do it in a seperate thread (in the future)
 
 							// TODO: Show OpenFolderBrowser to select jars
 							/*if(showWindowAddSource())
@@ -279,34 +283,34 @@ namespace p95
 					imgui::SetCursorPos(ImVec2(15, imgui::GetCursorPos().y));
 					imgui::BeginGroup();
 					{
-						int _recCnt = RecipeManager::count();
+						int _recCnt = RecipeParser::count();
 						imgui::Text("Sources (%d)", _recCnt);
 						imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x, imgui::GetCursorPos().y + 5));
 						imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_LIST_ITEM_BG);
 						imgui::BeginChild("##ListJars", SIZE_LIST_JARS, ImGuiChildFlags_Border);
 						{
 							imgui::PushStyleColor(ImGuiCol_HeaderHovered, (ImVec4)COL_LIST_ITEM_HOVER);
-							// TODO: Displaying sources as tree
 							if(_recCnt > 0)
 							{
 #ifdef _DEBUG
 								static ImVector<bool> _selectedNodes;
 								_selectedNodes.resize(_recCnt, false);
 #endif
-								if(imgui::TreeNode("forge-43.4.0")) // FIX: Make label dynamic (if possible)
+								if(imgui::TreeNode("forge-43.4.0")) // FIXME: Make label dynamic (if possible)
 								{
 									imgui::Unindent(imgui::GetTreeNodeToLabelSpacing());
 									for(int i = 0; i < _recCnt; i++)
 									{
+										std::string _filename = RecipeParser::getRaw(i).filename;
 #ifdef _DEBUG
-										std::string _filename = RecipeManager::getRaw(i).m_filename;
 										if(imgui::Selectable(_filename.c_str(), _selectedNodes[i]))
 										{
 											memset(_selectedNodes.Data, 0, _selectedNodes.Size);
 											_selectedNodes[i] ^= true;
 											_currentSelectionIdx = i;
-										}
 
+											RecipeParser::parse(_currentSelectionIdx);
+										}
 #else
 										imgui::BulletText("%s", _filename.c_str());
 #endif
@@ -328,7 +332,7 @@ namespace p95
 					ImVec2 _ftr1Size = imgui::CalcTextSize(_footer_1);
 					ImVec2 _ftr2Size = imgui::CalcTextSize(_footer_2);
 					imgui::PushFont(m_fontFooter);
-					// FIX: Horizontal alignment
+					// FIXME: Horizontal alignment
 					//imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x + (_ftr1Size.x * 0.5f), imgui::GetCursorPos().y));
 					imgui::SetCursorPos(ImVec2(imgui::GetWindowSize().x * 0.5 - (_ftr1Size.x * 0.5f), imgui::GetCursorPos().y));
 					imgui::Text(_footer_1);
@@ -386,7 +390,7 @@ namespace p95
 					ImVec2 _sepPosEnd(_sepPosStart.x + SIZE_VERT_SEPARATOR.x, _sepPosStart.y + SIZE_VERT_SEPARATOR.y);
 					_drawList->AddRectFilled(_sepPosStart, _sepPosEnd, COL_SECTION_BG, 12.0f);
 
-					/****** Fake crafting grid ******/ // FIX: Change all buttons to ImageButton or Image widget
+					/****** Fake crafting grid ******/ // FIXME: Change all buttons to ImageButton or Image widget
 					imgui::SetCursorPos(ImVec2(341, 64));
 					imgui::BeginGroup();
 					{
@@ -400,7 +404,7 @@ namespace p95
 							for(int row = 0; row < 3; row++)
 							{
 								for(int col = 0; col < 3; col++)
-								{ // FIX: Sizing and positioning, to immitate original crafting grid
+								{ // FIXME: Sizing and positioning, to immitate original crafting grid
 									imgui::SetCursorPos(ImVec2(_gorig.x + ((SIZE_BTN_INPUT_ITEM.x - 1) * col), _gorig.y + ((SIZE_BTN_INPUT_ITEM.y - 1) * row)));
 									imgui::PushID(row * 3 + col);
 									imgui::Button("##gcell", SIZE_BTN_INPUT_ITEM);
@@ -412,7 +416,7 @@ namespace p95
 						}
 						imgui::EndGroup();
 
-						// Arrow - literaly rect and triangle
+						// Arrow - literaly just rect and triangle
 						imgui::SetCursorPos(ImVec2(_gorig.x + 164, _gorig.y + 54));
 						imgui::BeginGroup();
 						{
@@ -421,12 +425,22 @@ namespace p95
 								_sectionOrigin.x + _local.x,
 								_sectionOrigin.y + _local.y
 							};
-							_drawList->AddRectFilled(ImVec2(_offset.x, _offset.y + 17), ImVec2(_offset.x + 28, _offset.y + 17 + 10), COL_SECTION_BG);
+
+							_drawList->AddRectFilled(
+								ImVec2(_offset.x, _offset.y + 11),
+								ImVec2(_offset.x + 28, _offset.y + 11 + 10),
+								COL_SECTION_BG);
+
+							_drawList->AddTriangleFilled(
+								ImVec2(_offset.x + 28, _offset.y + 2),
+								ImVec2(_offset.x + 52, _offset.y + 16),
+								ImVec2(_offset.x + 28, _offset.y + 30),
+								COL_SECTION_BG);
 						}
 						imgui::EndGroup();
 
 						// Output
-						imgui::SetCursorPos(ImVec2(_gorig.x + 232, _gorig.y + 48));
+						imgui::SetCursorPos(ImVec2(_gorig.x + 232, _gorig.y + 47));
 						imgui::Button("##BtnOutputItem", SIZE_BTN_INPUT_ITEM);
 
 					}
@@ -444,7 +458,7 @@ namespace p95
 						imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_SECTION_BG);
 						imgui::BeginChild("##Ingredients", SIZE_INGREDIENTS_SECTION);
 						{
-
+							// TODO: Ingredients list
 						}
 						imgui::EndChild();
 						imgui::PopStyleColor();
@@ -467,8 +481,8 @@ namespace p95
 	void App::drawDebugUI()
 	{
 		imgui::SetCursorPos(ImVec2());
-		RecipeRaw _raw = RecipeManager::getRaw(_currentSelectionIdx);
-		imgui::InputTextMultiline("##src", (char*)_raw.m_content.c_str(), _raw.m_content.length() + 1, imgui::GetContentRegionAvail());
+		RecipeRaw _raw = RecipeParser::getRaw(_currentSelectionIdx);
+		imgui::InputTextMultiline("##src", (char*)_raw.content.c_str(), _raw.content.length() + 1, imgui::GetContentRegionAvail());
 	}
 #endif
 
