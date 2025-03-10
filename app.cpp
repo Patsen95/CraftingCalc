@@ -154,11 +154,12 @@ namespace p95
 		m_uiStyle->Colors[ImGuiCol_ButtonHovered] = _btnHover;
 		m_uiStyle->Colors[ImGuiCol_ButtonActive] = _btnClick;
 
-		// Font - Inter-Medium
+		// TODO: Add neccessary null checks
+		// Loading fonts
 		m_io->Fonts->AddFontDefault();
-		m_fontMain = m_io->Fonts->AddFontFromFileTTF("Inter-Medium.ttf", 14);
-		m_fontMedium = m_io->Fonts->AddFontFromFileTTF("Inter-Medium.ttf", 20);
-		m_fontFooter = m_io->Fonts->AddFontFromFileTTF("Inter-Medium.ttf", 12);
+		m_fontMain = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 14);
+		m_fontMedium = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 20);
+		m_fontFooter = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 12);
 	}
 
 	int App::loop()
