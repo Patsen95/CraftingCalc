@@ -1,2 +1,0 @@
-- Compile ZipLib for Release
-- Add neccessary NULL-checks on loading assets
