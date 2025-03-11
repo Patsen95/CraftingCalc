@@ -48,15 +48,15 @@ namespace p95
 	{
 	public:
 		
-		static void loadJar(const char* path);
+		static bool loadJar(const char* path);
 
 		static void parse(int idx);
-
 		static void clear();
+
+		static const char* getJarFilename();
 		static int count();
 		static RecipeRaw getRaw(int idx);
 		static RecipeRaw getRaw(const char* name);
-
 
 
 	private:

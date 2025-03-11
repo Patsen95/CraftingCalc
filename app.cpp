@@ -247,18 +247,20 @@ namespace p95
 						if(imgui::Button("How to...", SIZE_BTN_INSTR))
 							imgui::OpenPopup("How to...");
 
-						ImVec2 _center = imgui::GetMainViewport()->GetCenter();
-						imgui::SetNextWindowPos(_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-						imgui::PushStyleColor(ImGuiCol_TitleBgActive, (ImVec4)COL_SECTION_BG);
-						if(imgui::BeginPopupModal("How to...", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-						{
-							imgui::Text("%s\n\n", TEXT_INSTRUCTION);
-							imgui::Separator();
-							if(imgui::Button("Close"))
-								imgui::CloseCurrentPopup();
-							imgui::EndPopup();
+						{ /****** INSTRUCTION POPUP ******/
+							ImVec2 _center = imgui::GetMainViewport()->GetCenter();
+							imgui::SetNextWindowPos(_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+							imgui::PushStyleColor(ImGuiCol_TitleBgActive, (ImVec4)COL_SECTION_BG);
+							if(imgui::BeginPopupModal("How to...", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+							{
+								imgui::Text("%s\n\n", TEXT_INSTRUCTION);
+								imgui::Separator();
+								if(imgui::Button("Close"))
+									imgui::CloseCurrentPopup();
+								imgui::EndPopup();
+							}
+							imgui::PopStyleColor();
 						}
-						imgui::PopStyleColor();
 
 						imgui::TableNextRow(NULL, 57);
 						imgui::TableNextColumn();
@@ -266,13 +268,29 @@ namespace p95
 						imgui::SetCursorPos(ImVec2(53, imgui::GetCursorPos().y));
 						if(imgui::Button("Add source...", SIZE_BTN_ADD))
 						{
-							RecipeParser::loadJar(NULL); // TODO: Do it in a seperate thread (in the future)
+							if(RecipeParser::loadJar(NULL) == false) // TODO: Do this in a seperate thread
+								imgui::OpenPopup("Jar loading error");
 
 							// TODO: Show OpenFolderBrowser to select jars
 							/*if(showWindowAddSource())
 							{
 
 							}*/
+						}
+
+						{ /****** JAR LOADING ERROR POPUP ******/
+							ImVec2 _center = imgui::GetMainViewport()->GetCenter();
+							imgui::SetNextWindowPos(_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+							imgui::PushStyleColor(ImGuiCol_TitleBgActive, (ImVec4)COL_SECTION_BG);
+							if(imgui::BeginPopupModal("Jar loading error", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+							{
+								imgui::Text("Cannot load *.jar file!\n\n");
+								imgui::Separator();
+								if(imgui::Button("Close"))
+									imgui::CloseCurrentPopup();
+								imgui::EndPopup();
+							}
+							imgui::PopStyleColor();
 						}
 					}
 					imgui::EndGroup();
@@ -297,7 +315,7 @@ namespace p95
 								static ImVector<bool> _selectedNodes;
 								_selectedNodes.resize(_recCnt, false);
 #endif
-								if(imgui::TreeNode("forge-43.4.0")) // FIXME: Make label dynamic (if possible)
+								if(imgui::TreeNode(RecipeParser::getJarFilename()))
 								{
 									imgui::Unindent(imgui::GetTreeNodeToLabelSpacing());
 									for(int i = 0; i < _recCnt; i++)

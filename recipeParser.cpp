@@ -1,7 +1,8 @@
 #include "recipeParser.h"
 
-#include <ZipFile.h>
+#include "ZipFile.h"
 #include <fstream>
+#include <filesystem>
 
 #include <iostream>
 
@@ -10,23 +11,27 @@ namespace p95
 {
 	using json = nlohmann::json;
 
-	const char* JAR_PATH = "E:/MinecraftForge/Install/versions/forge-43.4.0/forge-43.4.0.jar"; // DEBUG
+	// DEBUG
+	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/forge-43.4.0/forge-43.4.0.jar";
+	const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/neoforge-21.3.65/neoforge-21.3.65.jar";
 
-	// Those are internal paths (inside jar archive) - VANILLA ONLY
-	const char* DIR_RECIPES = "data/minecraft/recipes";
+	// JARs internal paths - VANILLA ONLY
 	const char* DIT_TEX_ITEMS = "assets/minecraft/textures/item";
 	const char* DIR_TEX_BLOCKS = "assets/minecraft/textures/block";
 
 
 	std::vector<RecipeRaw> RecipeParser::m_recipesRaw;
-
+	static std::string lastLoadedJarFilename;
 
 	/****************************************************************************/
-	void RecipeParser::loadJar(const char* path)
+	bool RecipeParser::loadJar(const char* path)
 	{
 		path = JAR_PATH; // DEBUG
 
-		// TODO: Chceck if content from this path has been loaded already
+		if(!std::filesystem::exists(path)) return false;
+
+		lastLoadedJarFilename = std::filesystem::path(path).filename().string();
+
 		ZipArchive::Ptr _jar = ZipFile::Open(path);
 		int _entriesCnt = _jar->GetEntriesCount();
 
@@ -40,7 +45,12 @@ namespace p95
 			std::string _currentPath = _entry->GetFullName().substr(0, _sl);
 
 			// Isolate all *.json files from data/minecraft/recipes directory
-			if(_currentPath == DIR_RECIPES)
+			// NOTE:
+			// There are inconsistencies in directory names between versions of Forge and NeoForge.
+			// In some of them the recipe directory name is "recipe" and in the others "recipes", so an addtional 
+			// code is needed to handle those differences.		
+			if(_currentPath == "data/minecraft/recipe" ||    // FIXME: this check MUST be made better
+				_currentPath == "data/minecraft/recipes") // Forge
 			{
 				std::string _filename = _entry->GetName();
 
@@ -57,6 +67,7 @@ namespace p95
 				add({_filename, _content});
 			}
 		}
+		return true;
 		//printf("Capacity: %d [Elements: %d | ALLOC: %d bytes]\n\n", m_recipesRaw.capacity(), m_recipesRaw.size(), m_recipesRaw.capacity() * sizeof(RecipeRaw));
 	}
 
@@ -78,6 +89,11 @@ namespace p95
 		{
 			
 		}*/
+	}
+
+	const char* RecipeParser::getJarFilename()
+	{
+		return lastLoadedJarFilename.c_str();
 	}
 
 	void RecipeParser::clear() // FIXME: Fix those huge memo leaks after clearing vector!!!!!

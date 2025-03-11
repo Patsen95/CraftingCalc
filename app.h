@@ -1,8 +1,10 @@
 #pragma once
-#include "recipesManager.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+#include "recipesManager.h"
+
 #include <stdio.h>
 //#define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
