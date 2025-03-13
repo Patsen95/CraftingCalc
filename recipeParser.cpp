@@ -1,9 +1,9 @@
 #include "recipeParser.h"
-
 #include "ZipFile.h"
+
 #include <fstream>
 #include <filesystem>
-
+#include <sstream>
 #include <iostream>
 
 
@@ -20,8 +20,20 @@ namespace p95
 	const char* DIR_TEX_BLOCKS = "assets/minecraft/textures/block";
 
 
-	std::vector<RecipeRaw> RecipeParser::m_recipesRaw;
+	std::vector<RecipeRaw> RecipeParser::m_rawCache;
 	static std::string lastLoadedJarFilename;
+
+	/****************************************************************************/
+	/*std::vector<std::string> split(const std::string &source, const char delimiter)
+	{
+		std::vector<std::string> _tokens;
+		std::stringstream _ss(source);
+		std::string _token;
+
+		while(getline(_ss, _token, delimiter))
+			_tokens.push_back(_token);
+		return _tokens;
+	}*/
 
 	/****************************************************************************/
 	bool RecipeParser::loadJar(const char* path)
@@ -68,27 +80,58 @@ namespace p95
 			}
 		}
 		return true;
-		//printf("Capacity: %d [Elements: %d | ALLOC: %d bytes]\n\n", m_recipesRaw.capacity(), m_recipesRaw.size(), m_recipesRaw.capacity() * sizeof(RecipeRaw));
 	}
 
 	void RecipeParser::parse(int idx) // Index refers to whole json content
 	{
-		if(m_recipesRaw.empty()) return;
+		if(m_rawCache.empty()) return;
 		if(idx < 0) idx = 0;
 
-		json _json = json::parse(m_recipesRaw[idx].content);
+		json _json = json::parse(m_rawCache[idx].content);
 
-		/****** PARSING RECIPE TYPE ******/
-		std::string _type = _json["type"];
-		printf("Recipe type: %d (%s)\n", parseType(_type), _type.c_str());
+		// Parse type and obtain crafting pattern with keys definition
+		RecipeType _type = parseType(_json["type"]);
 
-
-		//printf("%s\n\n", _par.c_str());
-
-		/*for(auto& raw : m_recipesRaw)
+		if(_type == RecipeType::SHAPED || _type == RecipeType::SHAPELESS)
 		{
-			
-		}*/
+			Recipe _rec;
+			_rec.type = _type;
+
+			if(_type == RecipeType::SHAPED)
+			{
+				// Decode keys
+				for(auto& item : _json["key"].items())
+					_rec.ingredients.emplace_back(item.key()[0], item.value());
+
+				// Obtain crafting pattern
+				// NOTE: each string inside vector corresponds to single line in crafting grid
+				std::vector<std::string> _pattern = _json["pattern"];
+
+				// Set all array to NULL, cause all item keys are non-null characters
+				memset(&_rec.pattern, NULL, sizeof(_rec.pattern));
+				
+				int _ln = 0;
+				for(auto& line : _pattern)
+				{
+					for(int i = 0; i < line.size(); i++)
+						_rec.pattern[_ln + i] = line[i];
+					_ln += 3;
+				}
+			}
+
+			else if(_type == RecipeType::SHAPELESS)
+			{
+				std::vector<std::string> _ings = _json["ingredients"];
+				
+				for(auto& ing : _ings)
+					_rec.ingredients.emplace_back('#', ing);
+			}
+			_rec.outputItemName = _json["result"]["id"];
+			_rec.count = _json["result"]["count"];
+#ifdef _DEBUG
+			printRecipe(_rec);
+#endif
+		}
 	}
 
 	const char* RecipeParser::getJarFilename()
@@ -98,23 +141,23 @@ namespace p95
 
 	void RecipeParser::clear() // FIXME: Fix those huge memo leaks after clearing vector!!!!!
 	{
-		m_recipesRaw.clear();
-		m_recipesRaw = std::vector<RecipeRaw>();
-		//std::vector<RecipeRaw>().swap(m_recipesRaw);
-		//printf("CLEARING!\nCapacity: %d [Elements: %d | ALLOC: %d bytes]\n\n", m_recipesRaw.capacity(), m_recipesRaw.size(), m_recipesRaw.capacity() * sizeof(RecipeRaw));
+		m_rawCache.clear();
+		m_rawCache = std::vector<RecipeRaw>();
+		//std::vector<RecipeRaw>().swap(m_rawCache);
+		//printf("CLEARING!\nCapacity: %d [Elements: %d | ALLOC: %d bytes]\n\n", m_rawCache.capacity(), m_rawCache.size(), m_rawCache.capacity() * sizeof(RecipeRaw));
 	}
 
 	int RecipeParser::count()
 	{
-		return m_recipesRaw.size();
+		return m_rawCache.size();
 	}
 
 	RecipeRaw RecipeParser::getRaw(int idx)
 	{
 		if(idx < 0)
 			idx = 0;
-		if(m_recipesRaw.size() > 0)
-			return m_recipesRaw[idx];
+		if(m_rawCache.size() > 0)
+			return m_rawCache[idx];
 		return { };
 	}
 
@@ -127,14 +170,33 @@ namespace p95
 	/****************************************************************************/
 	void RecipeParser::add(const RecipeRaw& rec)
 	{
-		m_recipesRaw.emplace_back(rec);
+		m_rawCache.emplace_back(rec);
 	}
 
 	void RecipeParser::remove(int idx)
 	{
 		if(idx < 0)
 			idx = 0;
-		m_recipesRaw.erase(m_recipesRaw.begin() + idx);
+		m_rawCache.erase(m_rawCache.begin() + idx);
+	}
+
+	void RecipeParser::printRecipe(const Recipe& recipe)
+	{
+		printf("Type: %d\nIngredients:\n", recipe.type);
+
+		for(auto& ing : recipe.ingredients)
+			printf("  [%c] %s\n", ing.first, ing.second.c_str());
+
+		printf("Output item: %s\nCount: %d\n", recipe.outputItemName.c_str(), recipe.count);
+		
+		printf("Pattern:\n");
+		for(int i = 0; i < 9; i++)
+		{
+			if(i % 3 == 0)
+				printf("\n");
+			printf(" %c ", recipe.pattern[i]);
+		}
+		printf("\n-------------------------------\n\n");
 	}
 
 	RecipeType RecipeParser::parseType(const std::string& str)
@@ -155,8 +217,4 @@ namespace p95
 		else return RecipeType::UNKNOWN;
 	}
 
-	std::pair<char, std::string> RecipeParser::parseKey(const std::string& str)
-	{
-		return {};
-	}
 }

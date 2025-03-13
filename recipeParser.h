@@ -8,7 +8,7 @@
 
 namespace p95
 {
-	enum class RecipeType
+	enum class RecipeType : char
 	{
 		UNKNOWN = -1,
 		SHAPED,
@@ -27,7 +27,7 @@ namespace p95
 		TYPES_COUNT
 	};
 
-	enum class RecipeTypeSpecial
+	enum class RecipeTypeSpecial : char
 	{
 
 	};
@@ -41,7 +41,10 @@ namespace p95
 	struct Recipe
 	{
 		RecipeType type;
-
+		char pattern[9];
+		std::vector<std::pair<char, std::string>> ingredients;
+		std::string outputItemName;
+		unsigned int count;
 	};
 
 	class RecipeParser
@@ -62,11 +65,11 @@ namespace p95
 	private:
 		static void add(const RecipeRaw& rec);
 		static void remove(int idx);
+		static void printRecipe(const Recipe& recipe);
 
 		static RecipeType parseType(const std::string& str);
-		static std::pair<char, std::string> parseKey(const std::string& str);
 
 	private:
-		static std::vector<RecipeRaw> m_recipesRaw; // Temp storage actually
+		static std::vector<RecipeRaw> m_rawCache; // Just a cache...
 	};
 }

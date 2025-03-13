@@ -154,7 +154,7 @@ namespace p95
 		m_uiStyle->Colors[ImGuiCol_ButtonHovered] = _btnHover;
 		m_uiStyle->Colors[ImGuiCol_ButtonActive] = _btnClick;
 
-		// TODO: Add neccessary null checks
+		// FIXME: Add neccessary null checks
 		// Loading fonts
 		m_io->Fonts->AddFontDefault();
 		m_fontMain = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 14);

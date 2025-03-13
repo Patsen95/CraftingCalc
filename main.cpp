@@ -2,7 +2,7 @@
 
 
 
-// Such a smoooooth main ^_^
+// Such a smoooooth main
 int main()
 {
     p95::App app = p95::App();
