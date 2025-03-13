@@ -345,14 +345,15 @@ namespace p95
 					imgui::TableNextColumn();
 					static const char* _footer_1 = "Crafting Calc v1.0";
 					static const char* _footer_2 = "@Patsen95";
-					ImVec2 _ftr1Size = imgui::CalcTextSize(_footer_1);
-					ImVec2 _ftr2Size = imgui::CalcTextSize(_footer_2);
+
 					imgui::PushFont(m_fontFooter);
-					// FIXME: Horizontal alignment
-					//imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x + (_ftr1Size.x * 0.5f), imgui::GetCursorPos().y));
-					imgui::SetCursorPos(ImVec2(imgui::GetWindowSize().x * 0.5 - (_ftr1Size.x * 0.5f), imgui::GetCursorPos().y));
+					float _ftr1Size = imgui::CalcTextSize(_footer_1).x;
+					float _ftr2Size = imgui::CalcTextSize(_footer_2).x;
+					float _regionX = imgui::GetContentRegionAvail().x;
+
+					imgui::SetCursorPos(ImVec2((_regionX - _ftr1Size) * 0.5f, imgui::GetCursorPos().y));
 					imgui::Text(_footer_1);
-					imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x + _ftr2Size.x, imgui::GetCursorPos().y));
+					imgui::SetCursorPos(ImVec2((_regionX - _ftr2Size) * 0.5f, imgui::GetCursorPos().y));
 					imgui::Text(_footer_2);
 					imgui::PopFont();
 				}
