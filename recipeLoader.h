@@ -2,7 +2,7 @@
 
 #include "json.hpp"
 
-#include <utility> // pairs etc.
+#include <utility> // pairs
 
 
 
@@ -47,7 +47,7 @@ namespace p95
 		unsigned int count;
 	};
 
-	class RecipeParser
+	class RecipeLoader
 	{
 	public:
 		

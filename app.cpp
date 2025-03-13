@@ -90,10 +90,7 @@ namespace p95
 #endif
 	}
 
-	App::~App()
-	{
-
-	}
+	App::~App() { }
 
 	int App::initUI()
 	{
@@ -203,7 +200,7 @@ namespace p95
 		m_window = nullptr;
 		m_io = nullptr;
 
-		RecipeParser::clear();
+		RecipeLoader::clear();
 	}
 
 	/****************************************************************************/
@@ -237,7 +234,7 @@ namespace p95
 
 					/****** CLEAR RECIPES ******/
 					if(imgui::Button("C", ImVec2(20, 20)))
-						RecipeParser::clear();
+						RecipeLoader::clear();
 #endif
 					/****** BUTTONS ******/
 					imgui::SetCursorPos(ImVec2(53, 25));
@@ -268,7 +265,7 @@ namespace p95
 						imgui::SetCursorPos(ImVec2(53, imgui::GetCursorPos().y));
 						if(imgui::Button("Add source...", SIZE_BTN_ADD))
 						{
-							if(RecipeParser::loadJar(NULL) == false) // TODO: Do this in a seperate thread
+							if(RecipeLoader::loadJar(NULL) == false) // TODO: Do this in a seperate thread
 								imgui::OpenPopup("Jar loading error");
 
 							// TODO: Show OpenFolderBrowser to select jars
@@ -302,7 +299,7 @@ namespace p95
 					imgui::SetCursorPos(ImVec2(15, imgui::GetCursorPos().y));
 					imgui::BeginGroup();
 					{
-						int _recCnt = RecipeParser::count();
+						int _recCnt = RecipeLoader::count();
 						imgui::Text("Sources (%d)", _recCnt);
 						imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x, imgui::GetCursorPos().y + 5));
 						imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_LIST_ITEM_BG);
@@ -315,12 +312,12 @@ namespace p95
 								static ImVector<bool> _selectedNodes;
 								_selectedNodes.resize(_recCnt, false);
 #endif
-								if(imgui::TreeNode(RecipeParser::getJarFilename()))
+								if(imgui::TreeNode(RecipeLoader::getJarFilename()))
 								{
 									imgui::Unindent(imgui::GetTreeNodeToLabelSpacing());
 									for(int i = 0; i < _recCnt; i++)
 									{
-										std::string _filename = RecipeParser::getRaw(i).filename;
+										std::string _filename = RecipeLoader::getRaw(i).filename;
 #ifdef _DEBUG
 										if(imgui::Selectable(_filename.c_str(), _selectedNodes[i]))
 										{
@@ -328,7 +325,7 @@ namespace p95
 											_selectedNodes[i] ^= true;
 											_currentSelectionIdx = i;
 
-											RecipeParser::parse(_currentSelectionIdx);
+											RecipeLoader::parse(_currentSelectionIdx);
 										}
 #else
 										imgui::BulletText("%s", _filename.c_str());
@@ -500,7 +497,7 @@ namespace p95
 	void App::drawDebugUI()
 	{
 		imgui::SetCursorPos(ImVec2());
-		RecipeRaw _raw = RecipeParser::getRaw(_currentSelectionIdx);
+		RecipeRaw _raw = RecipeLoader::getRaw(_currentSelectionIdx);
 		imgui::InputTextMultiline("##src", (char*)_raw.content.c_str(), _raw.content.length() + 1, imgui::GetContentRegionAvail());
 	}
 #endif

@@ -1,9 +1,9 @@
-#include "recipeParser.h"
+#include "recipeLoader.h"
 #include "ZipFile.h"
 
 #include <fstream>
 #include <filesystem>
-#include <sstream>
+//#include <sstream>
 #include <iostream>
 
 
@@ -20,7 +20,7 @@ namespace p95
 	const char* DIR_TEX_BLOCKS = "assets/minecraft/textures/block";
 
 
-	std::vector<RecipeRaw> RecipeParser::m_rawCache;
+	std::vector<RecipeRaw> RecipeLoader::m_rawCache;
 	static std::string lastLoadedJarFilename;
 
 	/****************************************************************************/
@@ -36,7 +36,7 @@ namespace p95
 	}*/
 
 	/****************************************************************************/
-	bool RecipeParser::loadJar(const char* path)
+	bool RecipeLoader::loadJar(const char* path)
 	{
 		path = JAR_PATH; // DEBUG
 
@@ -82,7 +82,7 @@ namespace p95
 		return true;
 	}
 
-	void RecipeParser::parse(int idx) // Index refers to whole json content
+	void RecipeLoader::parse(int idx) // Index refers to whole json content
 	{
 		if(m_rawCache.empty()) return;
 		if(idx < 0) idx = 0;
@@ -134,12 +134,12 @@ namespace p95
 		}
 	}
 
-	const char* RecipeParser::getJarFilename()
+	const char* RecipeLoader::getJarFilename()
 	{
 		return lastLoadedJarFilename.c_str();
 	}
 
-	void RecipeParser::clear() // FIXME: Fix those huge memo leaks after clearing vector!!!!!
+	void RecipeLoader::clear() // FIXME: Fix those huge memo leaks after clearing vector!!!!!
 	{
 		m_rawCache.clear();
 		m_rawCache = std::vector<RecipeRaw>();
@@ -147,12 +147,12 @@ namespace p95
 		//printf("CLEARING!\nCapacity: %d [Elements: %d | ALLOC: %d bytes]\n\n", m_rawCache.capacity(), m_rawCache.size(), m_rawCache.capacity() * sizeof(RecipeRaw));
 	}
 
-	int RecipeParser::count()
+	int RecipeLoader::count()
 	{
 		return m_rawCache.size();
 	}
 
-	RecipeRaw RecipeParser::getRaw(int idx)
+	RecipeRaw RecipeLoader::getRaw(int idx)
 	{
 		if(idx < 0)
 			idx = 0;
@@ -161,26 +161,26 @@ namespace p95
 		return { };
 	}
 
-	RecipeRaw RecipeParser::getRaw(const char* name)
+	RecipeRaw RecipeLoader::getRaw(const char* name)
 	{
 		// TODO: If needed, retrieve RecipeRaw from vector by name
 		return { };
 	}
 
 	/****************************************************************************/
-	void RecipeParser::add(const RecipeRaw& rec)
+	void RecipeLoader::add(const RecipeRaw& rec)
 	{
 		m_rawCache.emplace_back(rec);
 	}
 
-	void RecipeParser::remove(int idx)
+	void RecipeLoader::remove(int idx)
 	{
 		if(idx < 0)
 			idx = 0;
 		m_rawCache.erase(m_rawCache.begin() + idx);
 	}
 
-	void RecipeParser::printRecipe(const Recipe& recipe)
+	void RecipeLoader::printRecipe(const Recipe& recipe)
 	{
 		printf("Type: %d\nIngredients:\n", recipe.type);
 
@@ -199,7 +199,7 @@ namespace p95
 		printf("\n-------------------------------\n\n");
 	}
 
-	RecipeType RecipeParser::parseType(const std::string& str)
+	RecipeType RecipeLoader::parseType(const std::string& str)
 	{
 		if(str.empty()) return RecipeType::UNKNOWN;
 		else if(str == "minecraft:crafting_shaped") return RecipeType::SHAPED;

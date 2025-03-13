@@ -27,7 +27,7 @@
     <ClCompile Include="libs\ui\imgui_widgets.cpp">
       <Filter>Deps\UI</Filter>
     </ClCompile>
-    <ClCompile Include="recipeParser.cpp">
+    <ClCompile Include="recipeLoader.cpp">
       <Filter>Recipes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -63,7 +63,7 @@
     <ClInclude Include="libs\ui\imstb_truetype.h">
       <Filter>Deps\UI</Filter>
     </ClInclude>
-    <ClInclude Include="recipeParser.h">
+    <ClInclude Include="recipeLoader.h">
       <Filter>Recipes</Filter>
     </ClInclude>
     <ClInclude Include="libs\json\json.hpp">
