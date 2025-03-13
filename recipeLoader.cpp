@@ -3,8 +3,8 @@
 
 #include <fstream>
 #include <filesystem>
-//#include <sstream>
 #include <iostream>
+//#include <sstream>
 
 
 namespace p95
@@ -19,8 +19,10 @@ namespace p95
 	const char* DIT_TEX_ITEMS = "assets/minecraft/textures/item";
 	const char* DIR_TEX_BLOCKS = "assets/minecraft/textures/block";
 
-
+	/****************************************************************************/
 	std::vector<RecipeRaw> RecipeLoader::m_rawCache;
+	std::set<std::string> RecipeLoader::m_loadedJars;
+
 	static std::string lastLoadedJarFilename;
 
 	/****************************************************************************/
@@ -40,9 +42,13 @@ namespace p95
 	{
 		path = JAR_PATH; // DEBUG
 
-		if(!std::filesystem::exists(path)) return false;
+		if(!std::filesystem::exists(path))
+			return false;
 
 		lastLoadedJarFilename = std::filesystem::path(path).filename().string();
+		
+		if(m_loadedJars.count(lastLoadedJarFilename) > 0)
+			return false;
 
 		ZipArchive::Ptr _jar = ZipFile::Open(path);
 		int _entriesCnt = _jar->GetEntriesCount();
@@ -59,10 +65,9 @@ namespace p95
 			// Isolate all *.json files from data/minecraft/recipes directory
 			// NOTE:
 			// There are inconsistencies in directory names between versions of Forge and NeoForge.
-			// In some of them the recipe directory name is "recipe" and in the others "recipes", so an addtional 
-			// code is needed to handle those differences.		
-			if(_currentPath == "data/minecraft/recipe" ||    // FIXME: this check MUST be made better
-				_currentPath == "data/minecraft/recipes") // Forge
+			// In some of them the recipe directory name is "recipe" and in the others "recipes", so some cheking is needed.
+			if(_currentPath == "data/minecraft/recipe" ||
+				_currentPath == "data/minecraft/recipes")
 			{
 				std::string _filename = _entry->GetName();
 
@@ -75,10 +80,11 @@ namespace p95
 					continue;
 				}
 
-				std::string _content(std::istreambuf_iterator<char>(*_recipeFile), {});
+				std::string _content(std::istreambuf_iterator<char>(*_recipeFile), { });
 				add({_filename, _content});
 			}
 		}
+		m_loadedJars.emplace(lastLoadedJarFilename);
 		return true;
 	}
 
@@ -139,12 +145,10 @@ namespace p95
 		return lastLoadedJarFilename.c_str();
 	}
 
-	void RecipeLoader::clear() // FIXME: Fix those huge memo leaks after clearing vector!!!!!
+	void RecipeLoader::clear()
 	{
 		m_rawCache.clear();
-		m_rawCache = std::vector<RecipeRaw>();
-		//std::vector<RecipeRaw>().swap(m_rawCache);
-		//printf("CLEARING!\nCapacity: %d [Elements: %d | ALLOC: %d bytes]\n\n", m_rawCache.capacity(), m_rawCache.size(), m_rawCache.capacity() * sizeof(RecipeRaw));
+		m_loadedJars.clear();
 	}
 
 	int RecipeLoader::count()

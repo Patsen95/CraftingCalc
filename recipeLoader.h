@@ -3,6 +3,7 @@
 #include "json.hpp"
 
 #include <utility> // pairs
+#include <set>
 
 
 
@@ -70,6 +71,9 @@ namespace p95
 		static RecipeType parseType(const std::string& str);
 
 	private:
-		static std::vector<RecipeRaw> m_rawCache; // Just a cache...
+
+		// Some caches
+		static std::vector<RecipeRaw> m_rawCache;
+		static std::set<std::string> m_loadedJars;
 	};
 }
