@@ -10,18 +10,22 @@
 namespace p95
 {
 	using json = nlohmann::json;
+	namespace fs = std::filesystem;
+
 
 	// DEBUG
 	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/forge-43.4.0/forge-43.4.0.jar";
-	const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/neoforge-21.3.65/neoforge-21.3.65.jar";
+	//const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/neoforge-21.1.133/neoforge-21.1.133.jar";
+	const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/1.21.4/1.21.4.jar";
 
 	// JARs internal paths - VANILLA ONLY
 	const char* DIT_TEX_ITEMS = "assets/minecraft/textures/item";
 	const char* DIR_TEX_BLOCKS = "assets/minecraft/textures/block";
 
 	/****************************************************************************/
-	std::vector<RecipeRaw> RecipeLoader::m_rawCache;
 	std::set<std::string> RecipeLoader::m_loadedJars;
+	std::vector<RecipeRaw> RecipeLoader::m_recipesRaw;
+	std::vector<Recipe> RecipeLoader::m_recipes;
 
 	static std::string lastLoadedJarFilename;
 
@@ -37,12 +41,17 @@ namespace p95
 		return _tokens;
 	}*/
 
+	// Removes "minecraft:" from item name
+	std::string nameOnly(const std::string& itemName)
+	{
+		return itemName.substr(itemName.find(':') + 1, itemName.length());
+	}
 	/****************************************************************************/
 	bool RecipeLoader::loadJar(const char* path)
 	{
 		path = JAR_PATH; // DEBUG
 
-		if(!std::filesystem::exists(path))
+		if(!fs::exists(path))
 			return false;
 
 		lastLoadedJarFilename = std::filesystem::path(path).filename().string();
@@ -51,9 +60,13 @@ namespace p95
 			return false;
 
 		ZipArchive::Ptr _jar = ZipFile::Open(path);
+
+		if(_jar == nullptr)
+			return false; // FIXME: Do proper error handling if _jar ptr is null
+
 		int _entriesCnt = _jar->GetEntriesCount();
 
-		for(size_t i = 0; i < _entriesCnt; ++i)
+		for(size_t i = 0; i < _entriesCnt; ++i) // I take for sure that _entriesCnt will always be > 0
 		{
 			auto _entry = _jar->GetEntry(int(i));
 			if(_entry == nullptr) 
@@ -76,68 +89,19 @@ namespace p95
 
 				if(_recipeFile == nullptr)
 				{
-					printf("NULL\n"); // FIXME: Do something with this...
+					printf("NULL\n"); // FIXME: Do proper error handling
 					continue;
 				}
 
 				std::string _content(std::istreambuf_iterator<char>(*_recipeFile), { });
-				add({_filename, _content});
+				
+				RecipeRaw _raw = { _filename, _content };
+				m_recipesRaw.emplace_back(_raw);
 			}
 		}
 		m_loadedJars.emplace(lastLoadedJarFilename);
+		parse(m_recipesRaw);
 		return true;
-	}
-
-	void RecipeLoader::parse(int idx) // Index refers to whole json content
-	{
-		if(m_rawCache.empty()) return;
-		if(idx < 0) idx = 0;
-
-		json _json = json::parse(m_rawCache[idx].content);
-
-		// Parse type and obtain crafting pattern with keys definition
-		RecipeType _type = parseType(_json["type"]);
-
-		if(_type == RecipeType::SHAPED || _type == RecipeType::SHAPELESS)
-		{
-			Recipe _rec;
-			_rec.type = _type;
-
-			if(_type == RecipeType::SHAPED)
-			{
-				// Decode keys
-				for(auto& item : _json["key"].items())
-					_rec.ingredients.emplace_back(item.key()[0], item.value());
-
-				// Obtain crafting pattern
-				// NOTE: each string inside vector corresponds to single line in crafting grid
-				std::vector<std::string> _pattern = _json["pattern"];
-
-				// Set all array to NULL, cause all item keys are non-null characters
-				memset(&_rec.pattern, NULL, sizeof(_rec.pattern));
-				
-				int _ln = 0;
-				for(auto& line : _pattern)
-				{
-					for(int i = 0; i < line.size(); i++)
-						_rec.pattern[_ln + i] = line[i];
-					_ln += 3;
-				}
-			}
-
-			else if(_type == RecipeType::SHAPELESS)
-			{
-				std::vector<std::string> _ings = _json["ingredients"];
-				
-				for(auto& ing : _ings)
-					_rec.ingredients.emplace_back('#', ing);
-			}
-			_rec.outputItemName = _json["result"]["id"];
-			_rec.count = _json["result"]["count"];
-#ifdef _DEBUG
-			printRecipe(_rec);
-#endif
-		}
 	}
 
 	const char* RecipeLoader::getJarFilename()
@@ -147,58 +111,177 @@ namespace p95
 
 	void RecipeLoader::clear()
 	{
-		m_rawCache.clear();
 		m_loadedJars.clear();
+		m_recipesRaw.clear();
+		m_recipes.clear();
 	}
 
-	int RecipeLoader::count()
+	size_t RecipeLoader::getLoadedJarsCount()
 	{
-		return m_rawCache.size();
+		return m_loadedJars.size();
 	}
 
-	RecipeRaw RecipeLoader::getRaw(int idx)
+	size_t RecipeLoader::getRecipesCount()
 	{
-		if(idx < 0)
-			idx = 0;
-		if(m_rawCache.size() > 0)
-			return m_rawCache[idx];
-		return { };
+		return m_recipes.size();
+		return 0;
 	}
 
-	RecipeRaw RecipeLoader::getRaw(const char* name)
+	Recipe& RecipeLoader::getRecipe(size_t idx)
 	{
-		// TODO: If needed, retrieve RecipeRaw from vector by name
-		return { };
+		return m_recipes[idx];
+	}
+
+	//Recipe* RecipeLoader::getRecipe(const std::string& name)
+	//{
+	//	// TODO: Get it done
+	//	return;
+	//}
+
+	size_t RecipeLoader::getRawsCount()
+	{
+		return m_recipesRaw.size();
+	}
+
+	RecipeRaw* RecipeLoader::getRaw(size_t idx)
+	{
+		if(m_recipes.empty())
+			return nullptr;
+		return m_recipes[idx].raw;
+	}
+	
+	/*RecipeRaw* RecipeLoader::getRaw(const char* name)
+	{
+
+	}*/
+
+	const char* RecipeLoader::getTypeName(RecipeType type)
+	{
+		switch(type)
+		{
+			case RecipeType::SHAPED: return "SHAPED";
+			case RecipeType::SHAPELESS: return "SHAPELESS";
+			case RecipeType::SMELTING: return "SHAPED";
+			case RecipeType::BLASTING: return "SHAPED";
+			case RecipeType::CAMPFIRE_COOKING: return "SHAPED";
+			case RecipeType::TRANSMUTE: return "SHAPED";
+			case RecipeType::SPECIAL: return "SHAPED";
+			case RecipeType::DECORATED_POT: return "SHAPED";
+			case RecipeType::SMITHING_TRANSFORM: return "SHAPED";
+			case RecipeType::SMITHING_TRIM: return "SHAPED";
+			case RecipeType::SMOKING: return "SHAPED";
+			case RecipeType::STONECUTTING: return "SHAPED";
+			case RecipeType::UNKNOWN:
+			default:
+				return "UNKNOWN";
+		}
 	}
 
 	/****************************************************************************/
-	void RecipeLoader::add(const RecipeRaw& rec)
+	void RecipeLoader::parse(const std::vector<RecipeRaw>& raws)
 	{
-		m_rawCache.emplace_back(rec);
-	}
+		if(raws.empty()) return; // FIXME: Do proper error handling
 
-	void RecipeLoader::remove(int idx)
-	{
-		if(idx < 0)
-			idx = 0;
-		m_rawCache.erase(m_rawCache.begin() + idx);
+		for(auto& rawRecipe : raws)
+		{
+			json _json = json::parse(rawRecipe.content);
+
+			// Parse type and obtain crafting pattern with keys definition
+			RecipeType _type = parseType(_json["type"]);
+			
+			if(_type == RecipeType::SHAPED || _type == RecipeType::SHAPELESS)
+			{
+				Recipe _rec;
+				_rec.type = _type;
+				_rec.name = fs::path(rawRecipe.filename).stem().string();
+
+				// Set all array to NULL, 'cause all item keys are non-null characters
+				memset(&_rec.pattern, NULL, sizeof(_rec.pattern));
+
+
+				//if(_rec.name != "acacia_boat")
+				//if(_rec.name != "acacia_fence_gate")
+				//if(_rec.name != "bolt_armor_trim_smithing_template") 
+				//if(_rec.name != "dye_black_bed")
+				//if(_rec.name != "ender_eye")
+					//continue;
+
+
+				if(_type == RecipeType::SHAPED)
+				{
+					// Decode keys - again, since json structure is different between jar versions, code gets a bit messy...
+					json _keys = _json["key"];
+
+					for(auto& key : _keys.items())
+					{
+						if(key.value().is_primitive())
+							_rec.ingredients.emplace_back(key.key()[0], nameOnly(key.value()));
+
+						else if(key.value().is_array())
+						{
+							for(auto& val : key.value().items())
+							{
+								_rec.ingredients.emplace_back(key.key()[0], nameOnly(val.value()));
+							}
+						}
+					}
+
+					// Obtain crafting pattern
+					// NOTE: each string corresponds to single line in crafting grid
+					std::vector<std::string> _pattern = _json["pattern"];
+
+					int _ln = 0;
+					for(auto& line : _pattern)
+					{
+						for(int i = 0; i < line.size(); i++)
+							_rec.pattern[_ln + i] = line[i];
+						_ln += 3;
+					}
+				}
+				else if(_type == RecipeType::SHAPELESS)
+				{
+					auto _ingreds = _json["ingredients"];
+
+					for(auto& item : _ingreds)
+					{
+						if(item.is_array())
+						{
+							for(auto& entry : item.items())
+							{
+								_rec.ingredients.emplace_back('@', nameOnly(entry.value())); // Diffrent char for alternative item
+							}
+						}
+						else
+							_rec.ingredients.emplace_back('#', nameOnly(item));
+					}
+				}
+				_rec.outputItemName = nameOnly(_json["result"]["id"]);
+				_rec.count = _json["result"]["count"];
+				m_recipes.emplace_back(_rec);
+
+				//printRecipe(_rec);
+			}
+		}
 	}
 
 	void RecipeLoader::printRecipe(const Recipe& recipe)
 	{
-		printf("Type: %d\nIngredients:\n", recipe.type);
+		printf("Name: %s\nType: %s\nIngredients:\n", recipe.name.c_str(), getTypeName(recipe.type));
 
 		for(auto& ing : recipe.ingredients)
 			printf("  [%c] %s\n", ing.first, ing.second.c_str());
 
 		printf("Output item: %s\nCount: %d\n", recipe.outputItemName.c_str(), recipe.count);
 		
-		printf("Pattern:\n");
-		for(int i = 0; i < 9; i++)
+		if(recipe.type == RecipeType::SHAPED)
 		{
-			if(i % 3 == 0)
-				printf("\n");
-			printf(" %c ", recipe.pattern[i]);
+			printf("Pattern:\n");
+			for(int i = 0; i < 9; i++)
+			{
+				if(i % 3 == 0)
+					printf("\n");
+				printf(" %c ", recipe.pattern[i]);
+			}
 		}
 		printf("\n-------------------------------\n\n");
 	}
@@ -219,6 +302,11 @@ namespace p95
 		else if(str == "minecraft:smoking") return RecipeType::SMOKING;
 		else if(str == "minecraft:stonecutting") return RecipeType::STONECUTTING;
 		else return RecipeType::UNKNOWN;
+	}
+
+	std::string RecipeLoader::parseRecipeName(const std::string& filename)
+	{
+		return "";
 	}
 
 }

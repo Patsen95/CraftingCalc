@@ -72,6 +72,7 @@ namespace p95
 	App::App()
 	{
 		m_window = nullptr;
+		m_io = nullptr;
 		m_windowSize = SIZE_WINDOW;
 		m_frameBufWidth = 0;
 		m_frameBufHeight = 0;
@@ -299,7 +300,7 @@ namespace p95
 					imgui::SetCursorPos(ImVec2(15, imgui::GetCursorPos().y));
 					imgui::BeginGroup();
 					{
-						int _recCnt = RecipeLoader::count();
+						int _recCnt = RecipeLoader::getRecipesCount();
 						imgui::Text("Sources (%d)", _recCnt);
 						imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x, imgui::GetCursorPos().y + 5));
 						imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_LIST_ITEM_BG);
@@ -317,15 +318,13 @@ namespace p95
 									imgui::Unindent(imgui::GetTreeNodeToLabelSpacing());
 									for(int i = 0; i < _recCnt; i++)
 									{
-										std::string _filename = RecipeLoader::getRaw(i).filename;
+										std::string _filename = RecipeLoader::getRecipe(i).name;
 #ifdef _DEBUG
 										if(imgui::Selectable(_filename.c_str(), _selectedNodes[i]))
 										{
 											memset(_selectedNodes.Data, 0, _selectedNodes.Size);
 											_selectedNodes[i] ^= true;
 											_currentSelectionIdx = i;
-
-											RecipeLoader::parse(_currentSelectionIdx);
 										}
 #else
 										imgui::BulletText("%s", _filename.c_str());
@@ -498,8 +497,8 @@ namespace p95
 	void App::drawDebugUI()
 	{
 		imgui::SetCursorPos(ImVec2());
-		RecipeRaw _raw = RecipeLoader::getRaw(_currentSelectionIdx);
-		imgui::InputTextMultiline("##src", (char*)_raw.content.c_str(), _raw.content.length() + 1, imgui::GetContentRegionAvail());
+		RecipeRaw* _raw = RecipeLoader::getRaw(_currentSelectionIdx);
+		if(_raw) imgui::InputTextMultiline("##src", (char*)_raw->content.c_str(), _raw->content.length() + 1, imgui::GetContentRegionAvail());
 	}
 #endif
 

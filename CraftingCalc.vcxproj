@@ -142,7 +142,6 @@
     <ClCompile Include="libs\ui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="recipeLoader.cpp" />
-    <ClCompile Include="recipesManager.cpp" />
     <ClCompile Include="app.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,7 +156,6 @@
     <ClInclude Include="libs\ui\imstb_textedit.h" />
     <ClInclude Include="libs\ui\imstb_truetype.h" />
     <ClInclude Include="recipeLoader.h" />
-    <ClInclude Include="recipesManager.h" />
     <ClInclude Include="app.h" />
   </ItemGroup>
   <ItemGroup>

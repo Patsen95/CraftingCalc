@@ -4,6 +4,7 @@
 
 #include <utility> // pairs
 #include <set>
+//#include <unordered_set>
 
 
 
@@ -28,10 +29,11 @@ namespace p95
 		TYPES_COUNT
 	};
 
-	enum class RecipeTypeSpecial : char
+	/*enum class RecipeTypeSpecial : char
 	{
 
 	};
+	*/
 
 	struct RecipeRaw
 	{
@@ -41,6 +43,8 @@ namespace p95
 
 	struct Recipe
 	{
+		RecipeRaw* raw;
+		std::string name;
 		RecipeType type;
 		char pattern[9];
 		std::vector<std::pair<char, std::string>> ingredients;
@@ -54,26 +58,32 @@ namespace p95
 		
 		static bool loadJar(const char* path);
 
-		static void parse(int idx);
 		static void clear();
 
 		static const char* getJarFilename();
-		static int count();
-		static RecipeRaw getRaw(int idx);
-		static RecipeRaw getRaw(const char* name);
+		static size_t getLoadedJarsCount();
+		static size_t getRecipesCount();
+		static Recipe& getRecipe(size_t idx);
+		static Recipe& getRecipe(const char* name);
+		static size_t getRawsCount();
+		static RecipeRaw* getRaw(size_t idx);
+		static RecipeRaw* getRaw(const char* name);
+		static const char* getTypeName(RecipeType type);
 
 
 	private:
-		static void add(const RecipeRaw& rec);
-		static void remove(int idx);
+
+		static void parse(const std::vector<RecipeRaw> &raws);
 		static void printRecipe(const Recipe& recipe);
 
 		static RecipeType parseType(const std::string& str);
+		static std::string parseRecipeName(const std::string& filename);
+
 
 	private:
 
-		// Some caches
-		static std::vector<RecipeRaw> m_rawCache;
 		static std::set<std::string> m_loadedJars;
+		static std::vector<RecipeRaw> m_recipesRaw;
+		static std::vector<Recipe> m_recipes;
 	};
 }
