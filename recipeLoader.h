@@ -63,17 +63,17 @@ namespace p95
 		static const char* getJarFilename();
 		static size_t getLoadedJarsCount();
 		static size_t getRecipesCount();
-		static Recipe& getRecipe(size_t idx);
-		static Recipe& getRecipe(const char* name);
+		static Recipe* getRecipe(size_t idx);
+		static Recipe* getRecipe(const std::string& name);
 		static size_t getRawsCount();
 		static RecipeRaw* getRaw(size_t idx);
-		static RecipeRaw* getRaw(const char* name);
+		static RecipeRaw* getRaw(const std::string& name);
 		static const char* getTypeName(RecipeType type);
 
 
 	private:
 
-		static void parse(const std::vector<RecipeRaw> &raws);
+		static void parse(std::vector<RecipeRaw> &raws);
 		static void printRecipe(const Recipe& recipe);
 
 		static RecipeType parseType(const std::string& str);
