@@ -127,16 +127,23 @@ namespace p95
 		return 0;
 	}
 
-	Recipe& RecipeLoader::getRecipe(size_t idx)
+	Recipe* RecipeLoader::getRecipe(size_t idx)
 	{
-		return m_recipes[idx];
+		if(m_recipes.empty())
+			return nullptr;
+		return &m_recipes[idx];
 	}
 
-	//Recipe* RecipeLoader::getRecipe(const std::string& name)
-	//{
-	//	// TODO: Get it done
-	//	return;
-	//}
+	Recipe* RecipeLoader::getRecipe(const std::string& name)
+	{
+		if(m_recipes.empty())
+			return nullptr;
+		for(auto& recipe : m_recipes)
+		{
+			if(recipe.name == name)
+				return &recipe;
+		}
+	}
 
 	size_t RecipeLoader::getRawsCount()
 	{
@@ -150,10 +157,17 @@ namespace p95
 		return m_recipes[idx].raw;
 	}
 	
-	/*RecipeRaw* RecipeLoader::getRaw(const char* name)
+	RecipeRaw* RecipeLoader::getRaw(const std::string& name)
 	{
-
-	}*/
+		if(m_recipes.empty() || name.empty())
+			return nullptr;
+		for(auto& recipe : m_recipes)
+		{
+			std::string _rawName = recipe.raw->filename;
+			if(recipe.raw->filename.substr(0, recipe.raw->filename.find('.')) == name)
+				return recipe.raw;
+		}
+	}
 
 	const char* RecipeLoader::getTypeName(RecipeType type)
 	{
@@ -178,7 +192,7 @@ namespace p95
 	}
 
 	/****************************************************************************/
-	void RecipeLoader::parse(const std::vector<RecipeRaw>& raws)
+	void RecipeLoader::parse(std::vector<RecipeRaw>& raws)
 	{
 		if(raws.empty()) return; // FIXME: Do proper error handling
 
@@ -192,20 +206,12 @@ namespace p95
 			if(_type == RecipeType::SHAPED || _type == RecipeType::SHAPELESS)
 			{
 				Recipe _rec;
+				_rec.raw = &rawRecipe;
 				_rec.type = _type;
 				_rec.name = fs::path(rawRecipe.filename).stem().string();
 
 				// Set all array to NULL, 'cause all item keys are non-null characters
 				memset(&_rec.pattern, NULL, sizeof(_rec.pattern));
-
-
-				//if(_rec.name != "acacia_boat")
-				//if(_rec.name != "acacia_fence_gate")
-				//if(_rec.name != "bolt_armor_trim_smithing_template") 
-				//if(_rec.name != "dye_black_bed")
-				//if(_rec.name != "ender_eye")
-					//continue;
-
 
 				if(_type == RecipeType::SHAPED)
 				{
@@ -234,7 +240,7 @@ namespace p95
 					for(auto& line : _pattern)
 					{
 						for(int i = 0; i < line.size(); i++)
-							_rec.pattern[_ln + i] = line[i];
+							_rec.pattern[_ln + i] = line[i]; // TODO: Crafting scheme should begin from the bottom
 						_ln += 3;
 					}
 				}
