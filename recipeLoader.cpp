@@ -42,7 +42,7 @@ namespace p95
 	}*/
 
 	// Removes "minecraft:" from item name
-	std::string nameOnly(const std::string& itemName)
+	std::string getClearItemName(const std::string& itemName)
 	{
 		return itemName.substr(itemName.find(':') + 1, itemName.length());
 	}
@@ -221,18 +221,18 @@ namespace p95
 					for(auto& key : _keys.items())
 					{
 						if(key.value().is_primitive())
-							_rec.ingredients.emplace_back(key.key()[0], nameOnly(key.value()));
+							_rec.ingredients.emplace_back(key.key()[0], getClearItemName(key.value()));
 
 						else if(key.value().is_array())
 						{
 							for(auto& val : key.value().items())
 							{
-								_rec.ingredients.emplace_back(key.key()[0], nameOnly(val.value()));
+								_rec.ingredients.emplace_back(key.key()[0], getClearItemName(val.value()));
 							}
 						}
 					}
 
-					// Obtain crafting pattern
+					// Read crafting pattern
 					// NOTE: each string corresponds to single line in crafting grid
 					std::vector<std::string> _pattern = _json["pattern"];
 
@@ -254,14 +254,14 @@ namespace p95
 						{
 							for(auto& entry : item.items())
 							{
-								_rec.ingredients.emplace_back('@', nameOnly(entry.value())); // Diffrent char for alternative item
+								_rec.ingredients.emplace_back('@', getClearItemName(entry.value())); // Diffrent char for alternative item
 							}
 						}
 						else
-							_rec.ingredients.emplace_back('#', nameOnly(item));
+							_rec.ingredients.emplace_back('#', getClearItemName(item));
 					}
 				}
-				_rec.outputItemName = nameOnly(_json["result"]["id"]);
+				_rec.outputItemName = getClearItemName(_json["result"]["id"]);
 				_rec.count = _json["result"]["count"];
 				m_recipes.emplace_back(_rec);
 
