@@ -49,7 +49,7 @@ namespace p95
 		char pattern[9];
 		std::vector<std::pair<char, std::string>> ingredients;
 		std::string outputItemName;
-		unsigned int count;
+		unsigned int outputCount;
 	};
 
 	class RecipeLoader

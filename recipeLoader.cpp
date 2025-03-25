@@ -136,7 +136,7 @@ namespace p95
 
 	Recipe* RecipeLoader::getRecipe(const std::string& name)
 	{
-		if(m_recipes.empty())
+		if(m_recipes.empty() || name.empty())
 			return nullptr;
 		for(auto& recipe : m_recipes)
 		{
@@ -262,7 +262,7 @@ namespace p95
 					}
 				}
 				_rec.outputItemName = getClearItemName(_json["result"]["id"]);
-				_rec.count = _json["result"]["count"];
+				_rec.outputCount = _json["result"]["count"];
 				m_recipes.emplace_back(_rec);
 
 				//printRecipe(_rec);
@@ -277,7 +277,7 @@ namespace p95
 		for(auto& ing : recipe.ingredients)
 			printf("  [%c] %s\n", ing.first, ing.second.c_str());
 
-		printf("Output item: %s\nCount: %d\n", recipe.outputItemName.c_str(), recipe.count);
+		printf("Output item: %s\nCount: %d\n", recipe.outputItemName.c_str(), recipe.outputCount);
 		
 		if(recipe.type == RecipeType::SHAPED)
 		{
