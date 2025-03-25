@@ -24,10 +24,13 @@ namespace p95
 	static const ImColor COL_CALC_SECTION_BG(63, 79, 87);
 	static const ImColor COL_SECTION_BG(47, 59, 65);
 	static const ImColor COL_SECTION_BORDER(14, 14, 14);
-	static const ImColor COL_SEPARATOR_BG = COL_SECTION_BG;
+	static const ImColor COL_SEPARATOR_CRAFTING = COL_SECTION_BG;
+	static const ImColor COL_SEPARATOR_ITEMS = COL_MAIN_WINDOW_BG;
 	static const ImColor COL_BUTTON_BG = COL_SECTION_BG;
 	static const ImColor COL_LIST_ITEM_BG = COL_SECTION_BG;
 	static const ImColor COL_LIST_ITEM_HOVER = COL_CALC_SECTION_BG;
+	static const ImColor COL_INGR_BUTTON_BG = COL_CALC_SECTION_BG;
+	static const ImColor COL_INGR_BUTTON_BORDER = COL_MAIN_WINDOW_BG;
 
 	static const ImVec2 SIZE_WINDOW(900, 600);
 	static const ImVec2 SIZE_MENU_SECTION(204, SIZE_WINDOW.y);
@@ -35,10 +38,13 @@ namespace p95
 	static const ImVec2 SIZE_BTN_ADD(104, 33);
 	static const ImVec2 SIZE_LIST_JARS(176, 403);
 	static const ImVec2 SIZE_BTN_INPUT_ITEM(48, 48);
+	static const ImVec2 SIZE_BTN_INGREDIENT(38, 38);
 	static const ImVec2 SIZE_INPUT_MULTIPLIER(42, 22);
 	static const ImVec2 SIZE_VERT_SEPARATOR(4, 226);
 	static const ImVec2 SIZE_CRAFTING_GRID(144, 144);
 	static const ImVec2 SIZE_INGREDIENTS_SECTION(663, 295);
+
+	static const ImVec2 PADDING_INGDREDIENTS_ITEM(14, 8);
 
 	static const char* TEXT_INSTRUCTION = "\
 		Recipes are defined in json format in data/minecraft/recipes directory (inside *.jar archive).\n\
@@ -82,12 +88,12 @@ namespace p95
 		m_fontMedium = nullptr;
 		m_fontFooter = nullptr;
 		m_dbgMode = false;
-		m_version = "0.1";
+		m_version = "pre-1.0 (alpha)";
 
 #ifdef _DEBUG
 		m_appTitle = "Crafting Calc [DEBUG]";
 #else
-		m_appTitle = std::string("Crafting Calc") + " v" + m_version; // Don't judge me...
+		m_appTitle = std::string("Crafting Calc") + m_version;
 #endif
 	}
 
@@ -342,18 +348,18 @@ namespace p95
 					/****** FOOTER ******/
 					imgui::TableNextRow();
 					imgui::TableNextColumn();
-					static const char* _footer_1 = "Crafting Calc v1.0";
-					static const char* _footer_2 = "@Patsen95";
+					const std::string _footer_1 = "Crafting Calc " + m_version;
+					const std::string _footer_2 = "@Patsen95";
 
 					imgui::PushFont(m_fontFooter);
-					float _ftr1Size = imgui::CalcTextSize(_footer_1).x;
-					float _ftr2Size = imgui::CalcTextSize(_footer_2).x;
+					float _ftr1Size = imgui::CalcTextSize(_footer_1.c_str()).x;
+					float _ftr2Size = imgui::CalcTextSize(_footer_2.c_str()).x;
 					float _regionX = imgui::GetContentRegionAvail().x;
 
 					imgui::SetCursorPos(ImVec2((_regionX - _ftr1Size) * 0.5f, imgui::GetCursorPos().y));
-					imgui::Text(_footer_1);
+					imgui::Text(_footer_1.c_str());
 					imgui::SetCursorPos(ImVec2((_regionX - _ftr2Size) * 0.5f, imgui::GetCursorPos().y));
-					imgui::Text(_footer_2);
+					imgui::Text(_footer_2.c_str());
 					imgui::PopFont();
 				}
 				imgui::EndTable();
@@ -364,11 +370,12 @@ namespace p95
 
 			imgui::SameLine();
 
-			_currSpace = imgui::GetContentRegionAvail();
+			/****** Separator line between menu and calc sections ******/
 			_drawList->AddLine(ImVec2(SIZE_MENU_SECTION.x, 0), SIZE_MENU_SECTION, COL_SECTION_BORDER);
 
 #pragma region CALC_SECTION
 
+			_currSpace = imgui::GetContentRegionAvail();
 			imgui::SetNextWindowPos(ImVec2(211 ,7));
 			imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_CALC_SECTION_BG);
 			imgui::BeginChild("##Calc", ImVec2(_currSpace.x, _currSpace.y - 7));
@@ -404,9 +411,13 @@ namespace p95
 					imgui::EndGroup();
 
 					/****** Vertical separator line ******/
-					ImVec2 _sepPosStart(_sectionOrigin.x + 275, _sectionOrigin.y + 21);
-					ImVec2 _sepPosEnd(_sepPosStart.x + SIZE_VERT_SEPARATOR.x, _sepPosStart.y + SIZE_VERT_SEPARATOR.y);
-					_drawList->AddRectFilled(_sepPosStart, _sepPosEnd, COL_SECTION_BG, 12.0f);
+					{
+						ImVec2 _sepPosStart(_sectionOrigin.x + 275, _sectionOrigin.y + 21);
+						ImVec2 _sepPosEnd(_sepPosStart.x + SIZE_VERT_SEPARATOR.x, _sepPosStart.y + SIZE_VERT_SEPARATOR.y);
+						_drawList->AddRectFilled(_sepPosStart, _sepPosEnd, COL_SEPARATOR_CRAFTING, 12.0f);
+					}
+
+					const auto& _currentRecipe = RecipeLoader::getRecipe(currentSelectionName);
 
 					/****** Fake crafting grid ******/ // FIXME: Change all buttons to ImageButton or Image widget
 					imgui::SetCursorPos(ImVec2(341, 64));
@@ -422,10 +433,17 @@ namespace p95
 							for(int row = 0; row < 3; row++)
 							{
 								for(int col = 0; col < 3; col++)
-								{ // FIXME: Sizing and positioning, to more imitate original crafting grid
+								{ // TODO: Sizing and positioning, to more imitate original crafting grid
+									
+									size_t _idx = row * 3 + col;
+									std::string _lbl = "";
+									
+									if(_currentRecipe)
+										_lbl += _currentRecipe->pattern[_idx];
+
 									imgui::SetCursorPos(ImVec2(_gorig.x + ((SIZE_BTN_INPUT_ITEM.x - 1) * col), _gorig.y + ((SIZE_BTN_INPUT_ITEM.y - 1) * row)));
 									imgui::PushID(row * 3 + col);
-									imgui::Button("##gcell", SIZE_BTN_INPUT_ITEM);
+									imgui::Button(_lbl.c_str(), SIZE_BTN_INPUT_ITEM);
 									imgui::PopID();
 								}
 							}
@@ -434,7 +452,7 @@ namespace p95
 						}
 						imgui::EndGroup();
 
-						// Arrow - literaly just rect and triangle
+						// Arrow - literally just rect and triangle
 						imgui::SetCursorPos(ImVec2(_gorig.x + 164, _gorig.y + 54));
 						imgui::BeginGroup();
 						{
@@ -464,7 +482,7 @@ namespace p95
 					}
 					imgui::EndGroup();
 
-					/****** Ingredients section ******/
+					/****** Ingredients list section ******/
 					imgui::SetCursorPos(ImVec2(9, 256));
 					imgui::PushFont(m_fontMedium);
 					imgui::BeginGroup();
@@ -477,6 +495,61 @@ namespace p95
 						imgui::BeginChild("##Ingredients", SIZE_INGREDIENTS_SECTION);
 						{
 							// TODO: Ingredients list
+							if(!currentSelectionName.empty())
+							{
+								_local = imgui::GetCursorPos();
+								const auto& _ingredients = _currentRecipe->ingredients;
+								const size_t _ingrCount = _currentRecipe->ingredients.size();
+								
+								imgui::SetCursorPos(ImVec2(_local.x + PADDING_INGDREDIENTS_ITEM.x, _local.y + PADDING_INGDREDIENTS_ITEM.y));
+								imgui::PushStyleVar(ImGuiStyleVar_CellPadding, PADDING_INGDREDIENTS_ITEM);
+								imgui::BeginTable("##IngrsTable", 
+									4, // Columns:	ICON | <item name> | x | <item count>
+									ImGuiTableFlags_SizingFixedFit |
+									ImGuiTableFlags_NoHostExtendX
+								);
+								{
+									imgui::TableSetupColumn("icon", ImGuiTableColumnFlags_WidthFixed, PADDING_INGDREDIENTS_ITEM.x * 2);
+									imgui::TableNextRow();
+
+									for(size_t ingrIdx = 0; ingrIdx < _ingrCount; ingrIdx++)
+									{
+										std::string _lbl(1, _ingredients[ingrIdx].first);
+
+										// SINGLE INGREDIENT
+										imgui::BeginGroup();
+										{
+											// Item's icon
+											imgui::TableSetColumnIndex(0);
+											imgui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+											imgui::PushStyleColor(ImGuiCol_Button, (ImVec4)COL_INGR_BUTTON_BG);
+											imgui::PushStyleColor(ImGuiCol_Border, (ImVec4)COL_INGR_BUTTON_BORDER);
+											imgui::PushID(ingrIdx);
+											imgui::Button(_lbl.c_str(), SIZE_BTN_INGREDIENT);
+											imgui::PopID();
+											imgui::PopStyleColor(2);
+											imgui::PopStyleVar();
+
+											// Item's name
+											imgui::TableSetColumnIndex(1);
+											imgui::Text(_ingredients[ingrIdx].second.c_str());
+
+											// 'x' char
+											imgui::TableSetColumnIndex(2);
+											imgui::Text("x");
+
+											// Multiplier
+											imgui::TableSetColumnIndex(3);
+											imgui::Text("69"); // TODO: Handle multiplier
+
+										}
+										imgui::EndGroup();
+										imgui::TableNextRow(NULL, PADDING_INGDREDIENTS_ITEM.y);
+									}
+								}
+								imgui::EndTable();
+								imgui::PopStyleVar();
+							}
 						}
 						imgui::EndChild();
 						imgui::PopStyleColor();
