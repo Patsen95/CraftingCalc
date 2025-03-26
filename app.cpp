@@ -51,6 +51,7 @@ namespace p95
 		Below you can add any *.jar path and application will automatically find and load recipes.\n\
 		For vanilla version of Minecraft(without any mods / modloaders)";
 
+	static Recipe* currentRecipe;
 
 	/**************************** DEBUG STUFF ****************************/
 #ifdef _DEBUG
@@ -331,6 +332,7 @@ namespace p95
 											memset(_selectedNodes.Data, 0, _selectedNodes.Size);
 											_selectedNodes[i] ^= true;
 											currentSelectionName = _filename;
+											currentRecipe = RecipeLoader::getRecipe(currentSelectionName);
 										}
 #else
 										imgui::BulletText("%s", _filename.c_str());
@@ -417,8 +419,6 @@ namespace p95
 						_drawList->AddRectFilled(_sepPosStart, _sepPosEnd, COL_SEPARATOR_CRAFTING, 12.0f);
 					}
 
-					const auto& _currentRecipe = RecipeLoader::getRecipe(currentSelectionName);
-
 					/****** Fake crafting grid ******/ // FIXME: Change all buttons to ImageButton or Image widget
 					imgui::SetCursorPos(ImVec2(341, 64));
 					imgui::BeginGroup();
@@ -438,8 +438,8 @@ namespace p95
 									size_t _idx = row * 3 + col;
 									std::string _lbl = "";
 									
-									if(_currentRecipe)
-										_lbl += _currentRecipe->pattern[_idx];
+									if(currentRecipe)
+										_lbl += currentRecipe->pattern[_idx];
 
 									imgui::SetCursorPos(ImVec2(_gorig.x + ((SIZE_BTN_INPUT_ITEM.x - 1) * col), _gorig.y + ((SIZE_BTN_INPUT_ITEM.y - 1) * row)));
 									imgui::PushID(row * 3 + col);
@@ -498,8 +498,8 @@ namespace p95
 							if(!currentSelectionName.empty())
 							{
 								_local = imgui::GetCursorPos();
-								const auto& _ingredients = _currentRecipe->ingredients;
-								const size_t _ingrCount = _currentRecipe->ingredients.size();
+								const auto& _ingredients = currentRecipe->ingredients;
+								const size_t _ingrCount = currentRecipe->ingredients.size();
 								
 								imgui::SetCursorPos(ImVec2(_local.x + PADDING_INGDREDIENTS_ITEM.x, _local.y + PADDING_INGDREDIENTS_ITEM.y));
 								imgui::PushStyleVar(ImGuiStyleVar_CellPadding, PADDING_INGDREDIENTS_ITEM);
