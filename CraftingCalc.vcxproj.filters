@@ -75,7 +75,4 @@
       <UniqueIdentifier>{a2687169-cadd-4cb4-871d-bf2080e79062}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="TODO.txt" />
-  </ItemGroup>
 </Project>
