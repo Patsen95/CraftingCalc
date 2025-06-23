@@ -104,13 +104,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\zip;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\ZipLib;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)libs\zip\bin\debug;$(ProjectDir)libs\ui\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(PlatformShortName)\$(Configuration);$(ProjectDir)libs\ui\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ZipLib.lib;zlib.lib;lzma.lib;bzip2.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
@@ -123,6 +123,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\ZipLib;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,6 +132,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+      <AdditionalDependencies>ZipLib.lib;zlib.lib;lzma.lib;bzip2.lib;opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(PlatformShortName)\$(Configuration);$(ProjectDir)libs\ui\glfw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -141,6 +145,9 @@
     <ClCompile Include="libs\ui\imgui_tables.cpp" />
     <ClCompile Include="libs\ui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="recipe.cpp" />
+    <ClCompile Include="recipeItem.cpp" />
+    <ClCompile Include="recipeItemList.cpp" />
     <ClCompile Include="recipeLoader.cpp" />
     <ClCompile Include="app.cpp" />
   </ItemGroup>
@@ -155,6 +162,9 @@
     <ClInclude Include="libs\ui\imstb_rectpack.h" />
     <ClInclude Include="libs\ui\imstb_textedit.h" />
     <ClInclude Include="libs\ui\imstb_truetype.h" />
+    <ClInclude Include="recipe.h" />
+    <ClInclude Include="recipeItem.h" />
+    <ClInclude Include="recipeItemList.h" />
     <ClInclude Include="recipeLoader.h" />
     <ClInclude Include="app.h" />
   </ItemGroup>

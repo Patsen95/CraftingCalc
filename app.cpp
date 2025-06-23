@@ -164,6 +164,7 @@ namespace p95
 		m_io->Fonts->AddFontDefault();
 		m_fontMain = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 14);
 		m_fontMedium = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 20);
+		m_fontLarge = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 28);
 		m_fontFooter = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 12);
 	}
 
@@ -242,7 +243,10 @@ namespace p95
 
 					/****** CLEAR RECIPES ******/
 					if(imgui::Button("C", ImVec2(20, 20)))
+					{
 						RecipeLoader::clear();
+						Recipe::clear();
+					}
 #endif
 					/****** BUTTONS ******/
 					imgui::SetCursorPos(ImVec2(53, 25));
@@ -275,12 +279,6 @@ namespace p95
 						{
 							if(RecipeLoader::loadJar(NULL) == false) // TODO: Do this in a seperate thread
 								imgui::OpenPopup("Jar loading error");
-
-							// TODO: Show OpenFolderBrowser to select jars
-							/*if(showWindowAddSource())
-							{
-
-							}*/
 						}
 
 						{ /****** JAR LOADING ERROR POPUP ******/
@@ -307,37 +305,50 @@ namespace p95
 					imgui::SetCursorPos(ImVec2(15, imgui::GetCursorPos().y));
 					imgui::BeginGroup();
 					{
-						int _recCnt = RecipeLoader::getRecipesCount();
-						imgui::Text("Loaded (%d)", _recCnt);
+						imgui::Text("Loaded (%d)", Recipe::getCount());
 						imgui::SetCursorPos(ImVec2(imgui::GetCursorPos().x, imgui::GetCursorPos().y + 5));
 						imgui::PushStyleColor(ImGuiCol_ChildBg, (ImVec4)COL_LIST_ITEM_BG);
 						imgui::BeginChild("##ListJars", SIZE_LIST_JARS, ImGuiChildFlags_Border);
 						{
 							imgui::PushStyleColor(ImGuiCol_HeaderHovered, (ImVec4)COL_LIST_ITEM_HOVER);
-							if(_recCnt > 0)
+
+							size_t _rcnt = Recipe::getCount();
+							if(_rcnt > 0)
 							{
-#ifdef _DEBUG
-								static ImVector<bool> _selectedNodes;
-								_selectedNodes.resize(_recCnt, false);
-#endif
+								static ImVector<bool> _selectedItems;
+								_selectedItems.resize(_rcnt, false);
+								
 								if(imgui::TreeNode(RecipeLoader::getJarFilename()))
 								{
 									imgui::Unindent(imgui::GetTreeNodeToLabelSpacing());
-									for(int i = 0; i < _recCnt; i++)
+									size_t _selRec = 0;
+									auto& vec = Recipe::getRecipes();
+											
+									for(auto& rec : vec)
 									{
-										std::string _filename = RecipeLoader::getRecipe(i)->name;
 #ifdef _DEBUG
-										if(imgui::Selectable(_filename.c_str(), _selectedNodes[i]))
+										if(rec.getType() == RecipeType::SHAPED)
+											imgui::PushStyleColor(ImGuiCol_Text, (ImVec4)ImColor(224, 255, 66, 150));
+
+										else if(rec.getType() == RecipeType::SHAPELESS)
+											imgui::PushStyleColor(ImGuiCol_Text, (ImVec4)ImColor(255, 170, 66, 150));
+											
+										if(imgui::Selectable(rec.getName().c_str(), _selectedItems[_selRec]))
 										{
-											memset(_selectedNodes.Data, 0, _selectedNodes.Size);
-											_selectedNodes[i] ^= true;
-											currentSelectionName = _filename;
-											currentRecipe = RecipeLoader::getRecipe(currentSelectionName);
+											memset(_selectedItems.Data, 0, _selectedItems.Size);
+											_selectedItems[_selRec] ^= true;
+											currentSelectionName = rec.getName();
+											currentRecipe = &rec;
 										}
+										imgui::PopStyleColor();
 #else
-										imgui::BulletText("%s", _filename.c_str());
+										imgui::BulletText("%s", rec.getName().c_str());
 #endif
+										if(_selRec > _rcnt)
+											_selRec = 0;
+										_selRec++;
 									}
+
 									imgui::TreePop();
 								}
 							}							
@@ -433,13 +444,14 @@ namespace p95
 							for(int row = 0; row < 3; row++)
 							{
 								for(int col = 0; col < 3; col++)
-								{ // TODO: Sizing and positioning, to more imitate original crafting grid
-									
+								{
+									// TODO: Sizing and positioning, to more imitate original crafting grid
+
 									size_t _idx = row * 3 + col;
 									std::string _lbl = "";
-									
+
 									if(currentRecipe)
-										_lbl += currentRecipe->pattern[_idx];
+										_lbl += currentRecipe->getCraftingPattern()[_idx];
 
 									imgui::SetCursorPos(ImVec2(_gorig.x + ((SIZE_BTN_INPUT_ITEM.x - 1) * col), _gorig.y + ((SIZE_BTN_INPUT_ITEM.y - 1) * row)));
 									imgui::PushID(row * 3 + col);
@@ -479,6 +491,17 @@ namespace p95
 						imgui::SetCursorPos(ImVec2(_gorig.x + 232, _gorig.y + 47));
 						imgui::Button("##BtnOutputItem", SIZE_BTN_INPUT_ITEM);
 
+						// "Shapeless" label
+						if(currentRecipe != nullptr)
+						{
+							if(currentRecipe->getType() == RecipeType::SHAPELESS)
+							{
+								imgui::PushFont(m_fontLarge);
+								imgui::SetCursorPos(ImVec2(_gorig.x + 13, _gorig.y - 35));
+								imgui::TextColored((ImVec4)COL_SECTION_BG, "Shapeless");
+								imgui::PopFont();
+							}
+						}
 					}
 					imgui::EndGroup();
 
@@ -495,11 +518,11 @@ namespace p95
 						imgui::BeginChild("##Ingredients", SIZE_INGREDIENTS_SECTION);
 						{
 							// TODO: Ingredients list
-							if(!currentSelectionName.empty())
+							if(currentRecipe != nullptr)
 							{
 								_local = imgui::GetCursorPos();
-								const auto& _ingredients = currentRecipe->ingredients;
-								const size_t _ingrCount = currentRecipe->ingredients.size();
+								const auto& _ingreds = currentRecipe->getIngredients();
+								const size_t _ingrCount = _ingreds.count();
 								
 								imgui::SetCursorPos(ImVec2(_local.x + PADDING_INGDREDIENTS_ITEM.x, _local.y + PADDING_INGDREDIENTS_ITEM.y));
 								imgui::PushStyleVar(ImGuiStyleVar_CellPadding, PADDING_INGDREDIENTS_ITEM);
@@ -514,38 +537,51 @@ namespace p95
 
 									for(size_t ingrIdx = 0; ingrIdx < _ingrCount; ingrIdx++)
 									{
-										std::string _lbl(1, _ingredients[ingrIdx].first);
+										if(currentRecipe->getType() == RecipeType::SHAPELESS)
+										{
+											if(ingrIdx < _ingrCount - 1)
+											{
+												// Skip displaying repeating items
+												if(_ingreds[ingrIdx].getId() == _ingreds[ingrIdx + 1].getId())
+													continue;
+											}
+										}
+
+										std::string _char(1, _ingreds[ingrIdx].getKey());
+										std::string _multiplierStr = std::to_string(_multiplier);
 
 										// SINGLE INGREDIENT
 										imgui::BeginGroup();
 										{
-											// Item's icon
+											// TODO: Item's icon (currently key character)
 											imgui::TableSetColumnIndex(0);
 											imgui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 											imgui::PushStyleColor(ImGuiCol_Button, (ImVec4)COL_INGR_BUTTON_BG);
 											imgui::PushStyleColor(ImGuiCol_Border, (ImVec4)COL_INGR_BUTTON_BORDER);
 											imgui::PushID(ingrIdx);
-											imgui::Button(_lbl.c_str(), SIZE_BTN_INGREDIENT);
+											imgui::Button(_char.c_str(), SIZE_BTN_INGREDIENT);
 											imgui::PopID();
 											imgui::PopStyleColor(2);
 											imgui::PopStyleVar();
 
 											// Item's name
 											imgui::TableSetColumnIndex(1);
-											imgui::Text(_ingredients[ingrIdx].second.c_str());
+											imgui::Text(_ingreds[ingrIdx].getDisplayId().c_str());
 
 											// 'x' char
 											imgui::TableSetColumnIndex(2);
 											imgui::Text("x");
 
-											// Multiplier
+											// Multiplier value
 											imgui::TableSetColumnIndex(3);
-											imgui::Text("69"); // TODO: Handle multiplier
+											imgui::Text(_multiplierStr.c_str());
 
 										}
 										imgui::EndGroup();
 										imgui::TableNextRow(NULL, PADDING_INGDREDIENTS_ITEM.y);
 									}
+
+
 								}
 								imgui::EndTable();
 								imgui::PopStyleVar();
@@ -566,17 +602,19 @@ namespace p95
 		imgui::End();
 	}
 
-#ifdef _DEBUG
 	void App::drawDebugUI()
 	{
-		RecipeRaw* _raw = RecipeLoader::getRaw(currentSelectionName);
-		if(_raw)
+#ifdef _DEBUG
+		if(RecipeLoader::getLoadedJarsCount() > 0)
 		{
+			if(currentSelectionName.empty())
+				return;
+			Recipe::Raw _raw = Recipe::getRaw(currentSelectionName);
 			imgui::SetCursorPos(ImVec2());
-			imgui::InputTextMultiline("##src", (char*)_raw->content.c_str(), _raw->content.length(), imgui::GetContentRegionAvail());
+			imgui::InputTextMultiline("##recipeRaw", (char*)_raw.content.c_str(), _raw.content.length() + 1, imgui::GetContentRegionAvail());
 		}
-	}
 #endif
+	}
 
 	bool App::showWindowAddSource()
 	{
@@ -603,29 +641,6 @@ namespace p95
 
 		if(GetOpenFileNameA(&ofn) == TRUE)
 			return ofn.lpstrFile;
-#endif
-		return std::string();
-	}
-
-	std::string App::showBrowseDirDialog()
-	{
-#ifdef _WIN32
-		HWND _handle = glfwGetWin32Window(m_window);
-		BROWSEINFO bri;
-		ZeroMemory(&bri, sizeof(BROWSEINFO));
-		bri.lpfn = BrowseCallbackProc;
-		bri.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-		bri.hwndOwner = _handle;
-		//bri.lpszTitle = L"";
-		//bri.lParam = "";
-
-		LPITEMIDLIST pidl = NULL;
-		if((pidl = SHBrowseForFolder(&bri)) != NULL)
-		{
-			char buffer[MAX_PATH];
-			if(SHGetPathFromIDListA(pidl, buffer))
-				return buffer;
-		}
 #endif
 		return std::string();
 	}

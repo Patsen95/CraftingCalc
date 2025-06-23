@@ -36,6 +36,7 @@ namespace p95
 		ImVec4 m_clearColor;
 		ImFont* m_fontMain;
 		ImFont* m_fontMedium;
+		ImFont* m_fontLarge;
 		ImFont* m_fontFooter;
 
 		std::string m_appTitle;

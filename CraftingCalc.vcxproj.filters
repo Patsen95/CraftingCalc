@@ -25,7 +25,16 @@
       <Filter>Deps\UI</Filter>
     </ClCompile>
     <ClCompile Include="recipeLoader.cpp">
-      <Filter>Recipes</Filter>
+      <Filter>Recipe</Filter>
+    </ClCompile>
+    <ClCompile Include="recipe.cpp">
+      <Filter>Recipe</Filter>
+    </ClCompile>
+    <ClCompile Include="recipeItem.cpp">
+      <Filter>Recipe</Filter>
+    </ClCompile>
+    <ClCompile Include="recipeItemList.cpp">
+      <Filter>Recipe</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -58,21 +67,30 @@
       <Filter>Deps\UI</Filter>
     </ClInclude>
     <ClInclude Include="recipeLoader.h">
-      <Filter>Recipes</Filter>
+      <Filter>Recipe</Filter>
     </ClInclude>
     <ClInclude Include="libs\json\json.hpp">
       <Filter>Deps</Filter>
     </ClInclude>
+    <ClInclude Include="recipe.h">
+      <Filter>Recipe</Filter>
+    </ClInclude>
+    <ClInclude Include="recipeItem.h">
+      <Filter>Recipe</Filter>
+    </ClInclude>
+    <ClInclude Include="recipeItemList.h">
+      <Filter>Recipe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Recipes">
-      <UniqueIdentifier>{4116bfba-93f6-4b33-9ded-874e40ef8e77}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Deps">
       <UniqueIdentifier>{b76b35ef-69a5-4adc-bb79-e84c5126bad5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Deps\UI">
       <UniqueIdentifier>{a2687169-cadd-4cb4-871d-bf2080e79062}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Recipe">
+      <UniqueIdentifier>{4116bfba-93f6-4b33-9ded-874e40ef8e77}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

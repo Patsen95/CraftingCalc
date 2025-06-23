@@ -1,6 +1,7 @@
 # Directories
 .vs
 Obj
+Bin/x64/Debug
 CraftingCalc/x64
 x64/Debug
 

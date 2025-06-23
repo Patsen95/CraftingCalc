@@ -1,5 +1,7 @@
 #include "recipeLoader.h"
+
 #include "ZipFile.h"
+#include "json.hpp"
 
 #include <fstream>
 #include <filesystem>
@@ -9,14 +11,20 @@
 
 namespace p95
 {
+	// DEBUG
+	const char* JAR_PATH = "E:/MinecraftForge/Install/versions/1.19.2/1.19.2.jar";
+	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/1.21.5/1.21.5.jar";
+	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/forge-43.4.0/forge-43.4.0.jar";
+	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/neoforge-20.4.239/neoforge-20.4.239.jar";
+	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/neoforge-21.1.133/neoforge-21.1.133.jar";
+	// 
+	//const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/neoforge-21.1.133/neoforge-21.1.133.jar";
+	//const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/1.21.4/1.21.4.jar";
+
+
+
 	using json = nlohmann::json;
 	namespace fs = std::filesystem;
-
-
-	// DEBUG
-	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/forge-43.4.0/forge-43.4.0.jar";
-	//const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/neoforge-21.1.133/neoforge-21.1.133.jar";
-	const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/1.21.4/1.21.4.jar";
 
 	// JARs internal paths - VANILLA ONLY
 	const char* DIT_TEX_ITEMS = "assets/minecraft/textures/item";
@@ -24,28 +32,10 @@ namespace p95
 
 	/****************************************************************************/
 	std::set<std::string> RecipeLoader::m_loadedJars;
-	std::vector<RecipeRaw> RecipeLoader::m_recipesRaw;
-	std::vector<Recipe> RecipeLoader::m_recipes;
+	std::vector<Recipe::Raw> RecipeLoader::m_recipesRaw;
 
-	static std::string lastLoadedJarFilename;
+	static std::string s_lastLoadedJarFilename;
 
-	/****************************************************************************/
-	/*std::vector<std::string> split(const std::string &source, const char delimiter)
-	{
-		std::vector<std::string> _tokens;
-		std::stringstream _ss(source);
-		std::string _token;
-
-		while(getline(_ss, _token, delimiter))
-			_tokens.push_back(_token);
-		return _tokens;
-	}*/
-
-	// Removes "minecraft:" from item name
-	std::string getClearItemName(const std::string& itemName)
-	{
-		return itemName.substr(itemName.find(':') + 1, itemName.length());
-	}
 	/****************************************************************************/
 	bool RecipeLoader::loadJar(const char* path)
 	{
@@ -54,15 +44,15 @@ namespace p95
 		if(!fs::exists(path))
 			return false;
 
-		lastLoadedJarFilename = std::filesystem::path(path).filename().string();
+		s_lastLoadedJarFilename = std::filesystem::path(path).filename().string();
 		
-		if(m_loadedJars.count(lastLoadedJarFilename) > 0)
+		if(m_loadedJars.count(s_lastLoadedJarFilename) > 0)
 			return false;
 
 		ZipArchive::Ptr _jar = ZipFile::Open(path);
 
 		if(_jar == nullptr)
-			return false; // FIXME: Do proper error handling if _jar ptr is null
+			return false; // FIXME: Proper error handling
 
 		int _entriesCnt = _jar->GetEntriesCount();
 
@@ -89,31 +79,29 @@ namespace p95
 
 				if(_recipeFile == nullptr)
 				{
-					printf("NULL\n"); // FIXME: Do proper error handling
+					printf("NULL\n"); // FIXME: Proper error handling
 					continue;
 				}
 
 				std::string _content(std::istreambuf_iterator<char>(*_recipeFile), { });
 				
-				RecipeRaw _raw = { _filename, _content };
+				Recipe::Raw _raw = { _filename, _content };
 				m_recipesRaw.emplace_back(_raw);
 			}
 		}
-		m_loadedJars.emplace(lastLoadedJarFilename);
+		m_loadedJars.emplace(s_lastLoadedJarFilename);
 		parse(m_recipesRaw);
 		return true;
 	}
 
 	const char* RecipeLoader::getJarFilename()
 	{
-		return lastLoadedJarFilename.c_str();
+		return s_lastLoadedJarFilename.c_str();
 	}
 
 	void RecipeLoader::clear()
 	{
 		m_loadedJars.clear();
-		m_recipesRaw.clear();
-		m_recipes.clear();
 	}
 
 	size_t RecipeLoader::getLoadedJarsCount()
@@ -121,78 +109,8 @@ namespace p95
 		return m_loadedJars.size();
 	}
 
-	size_t RecipeLoader::getRecipesCount()
-	{
-		return m_recipes.size();
-		return 0;
-	}
-
-	Recipe* RecipeLoader::getRecipe(size_t idx)
-	{
-		if(m_recipes.empty())
-			return nullptr;
-		return &m_recipes[idx];
-	}
-
-	Recipe* RecipeLoader::getRecipe(const std::string& name)
-	{
-		if(m_recipes.empty() || name.empty())
-			return nullptr;
-		for(auto& recipe : m_recipes)
-		{
-			if(recipe.name == name)
-				return &recipe;
-		}
-	}
-
-	size_t RecipeLoader::getRawsCount()
-	{
-		return m_recipesRaw.size();
-	}
-
-	RecipeRaw* RecipeLoader::getRaw(size_t idx)
-	{
-		if(m_recipes.empty())
-			return nullptr;
-		return m_recipes[idx].raw;
-	}
-	
-	RecipeRaw* RecipeLoader::getRaw(const std::string& name)
-	{
-		if(m_recipes.empty() || name.empty())
-			return nullptr;
-		for(auto& recipe : m_recipes)
-		{
-			std::string _rawName = recipe.raw->filename;
-			if(recipe.raw->filename.substr(0, recipe.raw->filename.find('.')) == name)
-				return recipe.raw;
-		}
-	}
-
-	const char* RecipeLoader::getTypeName(RecipeType type)
-	{
-		switch(type)
-		{
-			case RecipeType::SHAPED: return "SHAPED";
-			case RecipeType::SHAPELESS: return "SHAPELESS";
-			case RecipeType::SMELTING: return "SHAPED";
-			case RecipeType::BLASTING: return "SHAPED";
-			case RecipeType::CAMPFIRE_COOKING: return "SHAPED";
-			case RecipeType::TRANSMUTE: return "SHAPED";
-			case RecipeType::SPECIAL: return "SHAPED";
-			case RecipeType::DECORATED_POT: return "SHAPED";
-			case RecipeType::SMITHING_TRANSFORM: return "SHAPED";
-			case RecipeType::SMITHING_TRIM: return "SHAPED";
-			case RecipeType::SMOKING: return "SHAPED";
-			case RecipeType::STONECUTTING: return "SHAPED";
-			case RecipeType::UNKNOWN:
-			default:
-				return "UNKNOWN";
-		}
-	}
-
 	/****************************************************************************/
-	void RecipeLoader::parse(std::vector<RecipeRaw>& raws)
+	void RecipeLoader::parse(std::vector<Recipe::Raw>& raws)
 	{
 		if(raws.empty()) return; // FIXME: Do proper error handling
 
@@ -206,12 +124,11 @@ namespace p95
 			if(_type == RecipeType::SHAPED || _type == RecipeType::SHAPELESS)
 			{
 				Recipe _rec;
-				_rec.raw = &rawRecipe;
-				_rec.type = _type;
-				_rec.name = fs::path(rawRecipe.filename).stem().string();
+				_rec.m_raw = rawRecipe;
+				_rec.m_type = _type;
+				_rec.m_name = fs::path(rawRecipe.filename).stem().string();
 
-				// Set all array to NULL, 'cause all item keys are non-null characters
-				memset(&_rec.pattern, NULL, sizeof(_rec.pattern));
+				std::string _curRec = _rec.m_name;
 
 				if(_type == RecipeType::SHAPED)
 				{
@@ -220,15 +137,43 @@ namespace p95
 
 					for(auto& key : _keys.items())
 					{
-						if(key.value().is_primitive())
-							_rec.ingredients.emplace_back(key.key()[0], getClearItemName(key.value()));
-
-						else if(key.value().is_array())
+						// TODO: If key node contains 'tag' element or itemname starts with '#', process it
+						
+						if(key.value().is_object() || key.value().is_primitive())
 						{
-							for(auto& val : key.value().items())
+							RecipeItem _ritem;
+							std::string _id;
+
+							if(key.value().contains("item")) _id = clearItemName(key.value()["item"]);
+							else if(key.value().contains("tag")) _id = clearItemName(key.value()["tag"]);
+							else _id = clearItemName(key.value());
+
+							_ritem.setKey(key.key()[0]);
+							_ritem.setId(_id);
+							_rec.m_ingredients.add(_ritem);
+						}
+						else if(key.value().is_array()) // alternative items
+						{
+							RecipeItem _ritem;
+							size_t _cnt = key.value().size();
+							std::string _id;
+
+							_ritem.setKey(key.key()[0]);
+							
+							for(auto& val : key.value())
 							{
-								_rec.ingredients.emplace_back(key.key()[0], getClearItemName(val.value()));
+								if(val.contains("item")) _id = clearItemName(val["item"]);
+								else if(val.contains("tag")) _id = clearItemName(val["tag"]);
+								else _id = clearItemName(val);
+								
+								if(_cnt == key.value().size())
+									_ritem.setId(_id);
+								else
+									_ritem.addAlternativeItem(_id);
+
+								_cnt--;
 							}
+							_rec.m_ingredients.add(_ritem);
 						}
 					}
 
@@ -240,56 +185,89 @@ namespace p95
 					for(auto& line : _pattern)
 					{
 						for(int i = 0; i < line.size(); i++)
-							_rec.pattern[_ln + i] = line[i]; // TODO: Crafting scheme should begin from the bottom
+							_rec.m_pattern[_ln + i] = line[i];
 						_ln += 3;
 					}
 				}
 				else if(_type == RecipeType::SHAPELESS)
 				{
-					auto _ingreds = _json["ingredients"];
+					const std::array<char, 21> _constKeys = { // TODO: Randomize all
+						'@', '#' ,'!', '$', '%', '^', '&', 
+						'~', '+', '=', '<', '>', '/', '\\', 
+						'{', '}', '[', ']', ';', '*', '?' 
+					}; 
+					unsigned short _itmCnt = 0;
 
-					for(auto& item : _ingreds)
+					for(auto& item : _json["ingredients"])
 					{
-						if(item.is_array())
+						if(item.is_object() || item.is_primitive())
 						{
-							for(auto& entry : item.items())
-							{
-								_rec.ingredients.emplace_back('@', getClearItemName(entry.value())); // Diffrent char for alternative item
-							}
+							RecipeItem _ritem;
+							std::string _id;
+							
+							if(item.contains("item")) _id = clearItemName(item["item"]);
+							else if(item.contains("tag")) _id = clearItemName(item["tag"]);
+							else _id = clearItemName(item);
+
+							// Some items can repeat, so we can assign same key character to them
+							 if(_rec.m_ingredients.count() > 1 && _id == _rec.m_ingredients.last().getId())
+								_ritem.setKey(_rec.m_ingredients.getItem(_itmCnt - 1).getKey());
+							else
+								_ritem.setKey(_constKeys[_itmCnt]);
+							
+							_ritem.setId(_id);
+							_rec.m_ingredients.add(_ritem);
+							_itmCnt++;
 						}
-						else
-							_rec.ingredients.emplace_back('#', getClearItemName(item));
+						else if(item.is_array()) // alternative items
+						{
+							RecipeItem _ritem;
+							size_t _cnt = item.size();
+							std::string _id;
+
+							for(auto& entry : item)
+							{
+								if(entry.contains("item")) _id = clearItemName(entry["item"]);
+								else if(entry.contains("tag")) _id = clearItemName(entry["tag"]);
+								else _id = clearItemName(entry);
+
+								if(_cnt == item.size())
+								{
+									_ritem.setKey(_constKeys[_itmCnt]);
+									_ritem.setId(_id);
+								}
+								else
+									_ritem.addAlternativeItem(_id);
+
+								_cnt--;
+							}
+							_rec.m_ingredients.add(_ritem);
+							_itmCnt++;
+						}
+					}
+
+					// Generate crafting pattern
+					for(size_t i = 0; i < _rec.m_ingredients.count(); i++)
+					{
+						auto& ingr = _rec.m_ingredients[i];
+						_rec.m_pattern[i] = ingr.getKey();
 					}
 				}
-				_rec.outputItemName = getClearItemName(_json["result"]["id"]);
-				_rec.outputCount = _json["result"]["count"];
-				m_recipes.emplace_back(_rec);
+				if(_json["result"]["id"].is_null() == false)
+					_rec.m_outputItemName = clearItemName(_json["result"]["id"]);
+				else
+					_rec.m_outputItemName = clearItemName(_json["result"]["item"]);
+
+				if(_json["result"]["count"].is_null() == false)
+					_rec.m_outputCount = _json["result"]["count"];
+				else
+					_rec.m_outputCount = 1;
+
+				Recipe::m_recipeReg.emplace_back(_rec);
 
 				//printRecipe(_rec);
 			}
 		}
-	}
-
-	void RecipeLoader::printRecipe(const Recipe& recipe)
-	{
-		printf("Name: %s\nType: %s\nIngredients:\n", recipe.name.c_str(), getTypeName(recipe.type));
-
-		for(auto& ing : recipe.ingredients)
-			printf("  [%c] %s\n", ing.first, ing.second.c_str());
-
-		printf("Output item: %s\nCount: %d\n", recipe.outputItemName.c_str(), recipe.outputCount);
-		
-		if(recipe.type == RecipeType::SHAPED)
-		{
-			printf("Pattern:\n");
-			for(int i = 0; i < 9; i++)
-			{
-				if(i % 3 == 0)
-					printf("\n");
-				printf(" %c ", recipe.pattern[i]);
-			}
-		}
-		printf("\n-------------------------------\n\n");
 	}
 
 	RecipeType RecipeLoader::parseType(const std::string& str)
@@ -310,9 +288,8 @@ namespace p95
 		else return RecipeType::UNKNOWN;
 	}
 
-	std::string RecipeLoader::parseRecipeName(const std::string& filename)
+	std::string RecipeLoader::clearItemName(const std::string& name)
 	{
-		return "";
+		return name.substr(name.find(':') + 1, name.length());
 	}
-
 }
