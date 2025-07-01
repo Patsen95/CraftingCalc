@@ -37,6 +37,11 @@ namespace p95
 		m_outputCount = 1;
 	}
 
+	Recipe::~Recipe()
+	{
+		m_ingredients.clear();
+	}
+
 	const std::string Recipe::getName() const
 	{
 		return m_name;
@@ -47,10 +52,22 @@ namespace p95
 		return m_outputItemName;
 	}
 
-	const std::string Recipe::getDisplayName() const // TODO: Display recipe's name
+	const std::string Recipe::getDisplayName() const
 	{
-		
-		return "";
+		std::string _str = m_outputItemName;
+		std::string _out = "";
+		size_t _idx = 0;
+
+		for(char c : _str)
+		{
+			if(_idx == 0)
+				c = std::toupper(c);
+			if(c == '_')
+				c = 32;
+			_out += c;
+			_idx++;
+		}
+		return _out;
 	}
 
 	const RecipeType Recipe::getType() const

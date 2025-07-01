@@ -102,6 +102,7 @@ namespace p95
 	void RecipeLoader::clear()
 	{
 		m_loadedJars.clear();
+		m_recipesRaw.clear();
 	}
 
 	size_t RecipeLoader::getLoadedJarsCount()
