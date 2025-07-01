@@ -333,7 +333,7 @@ namespace p95
 										else if(rec.getType() == RecipeType::SHAPELESS)
 											imgui::PushStyleColor(ImGuiCol_Text, (ImVec4)ImColor(255, 170, 66, 150));
 											
-										if(imgui::Selectable(rec.getName().c_str(), _selectedItems[_selRec]))
+										if(imgui::Selectable(rec.getDisplayName().c_str(), _selectedItems[_selRec]))
 										{
 											memset(_selectedItems.Data, 0, _selectedItems.Size);
 											_selectedItems[_selRec] ^= true;
@@ -342,13 +342,12 @@ namespace p95
 										}
 										imgui::PopStyleColor();
 #else
-										imgui::BulletText("%s", rec.getName().c_str());
+										imgui::BulletText("%s", rec.getDisplayName().c_str());
 #endif
 										if(_selRec > _rcnt)
 											_selRec = 0;
 										_selRec++;
 									}
-
 									imgui::TreePop();
 								}
 							}							

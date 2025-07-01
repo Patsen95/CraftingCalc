@@ -54,7 +54,7 @@ namespace p95
 
 	const std::string Recipe::getDisplayName() const
 	{
-		std::string _str = m_outputItemName;
+		std::string _str = m_name;
 		std::string _out = "";
 		size_t _idx = 0;
 
