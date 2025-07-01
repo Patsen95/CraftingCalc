@@ -20,6 +20,7 @@ namespace p95
 {
 	/*************************** APP CONSTANTS ***************************/
 	static const ImColor COL_TEXT_PRIMARY(240, 240, 240);
+	static const ImColor COL_TEXT_SECONDARY(217, 217, 217);
 	static const ImColor COL_MAIN_WINDOW_BG(37, 46, 50);
 	static const ImColor COL_CALC_SECTION_BG(63, 79, 87);
 	static const ImColor COL_SECTION_BG(47, 59, 65);
@@ -326,6 +327,8 @@ namespace p95
 											
 									for(auto& rec : vec)
 									{
+										std::string _recipeName = rec.getDisplayName();
+										size_t _nameLen = imgui::CalcTextSize(_recipeName.c_str()).x;
 #ifdef _DEBUG
 										if(rec.getType() == RecipeType::SHAPED)
 											imgui::PushStyleColor(ImGuiCol_Text, (ImVec4)ImColor(224, 255, 66, 150));
@@ -333,7 +336,7 @@ namespace p95
 										else if(rec.getType() == RecipeType::SHAPELESS)
 											imgui::PushStyleColor(ImGuiCol_Text, (ImVec4)ImColor(255, 170, 66, 150));
 											
-										if(imgui::Selectable(rec.getDisplayName().c_str(), _selectedItems[_selRec]))
+										if(imgui::Selectable(_recipeName.c_str(), _selectedItems[_selRec]))
 										{
 											memset(_selectedItems.Data, 0, _selectedItems.Size);
 											_selectedItems[_selRec] ^= true;
@@ -341,8 +344,15 @@ namespace p95
 											currentRecipe = &rec;
 										}
 										imgui::PopStyleColor();
+
+										if(_nameLen > SIZE_LIST_JARS.x - 15) // considering vertical scrollbar width
+											imgui::SetItemTooltip(_recipeName.c_str());
 #else
-										imgui::BulletText("%s", rec.getDisplayName().c_str());
+										imgui::PushStyleColor(ImGuiCol_Text, (ImVec4)COL_TEXT_SECONDARY);
+										imgui::BulletText("%s", _recipeName.c_str());
+										imgui::PopStyleColor();
+										if(_nameLen > SIZE_LIST_JARS.x - 45) // considering vertical scrollbar width and bullet offset
+											imgui::SetItemTooltip(_recipeName.c_str());
 #endif
 										if(_selRec > _rcnt)
 											_selRec = 0;
