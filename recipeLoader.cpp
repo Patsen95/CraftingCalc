@@ -2,11 +2,11 @@
 
 #include "ZipFile.h"
 #include "json.hpp"
+#include "logging.h"
 
 #include <fstream>
 #include <filesystem>
 #include <iostream>
-//#include <sstream>
 
 
 namespace p95
@@ -40,23 +40,35 @@ namespace p95
 	bool RecipeLoader::loadJar(const char* path)
 	{
 		path = JAR_PATH; // DEBUG
+		Logger::setTag("RecipeLoader");
 
 		if(!fs::exists(path))
+		{
+			LOG_ERROR("File or path %s does not exist", path);
 			return false;
+		}
 
 		s_lastLoadedJarFilename = std::filesystem::path(path).filename().string();
-		
+		LOG_INFO("Opening JAR: %s", s_lastLoadedJarFilename.c_str());
+
 		if(m_loadedJars.count(s_lastLoadedJarFilename) > 0)
+		{
+			LOG_WARNING("JAR \"%s\" already loaded", s_lastLoadedJarFilename.c_str());
 			return false;
+		}
 
 		ZipArchive::Ptr _jar = ZipFile::Open(path);
 
 		if(_jar == nullptr)
+		{
+			LOG_ERROR("Cannot load JAR \"%s\"", s_lastLoadedJarFilename.c_str());
 			return false; // FIXME: Proper error handling
+		}
 
 		int _entriesCnt = _jar->GetEntriesCount();
-
-		for(size_t i = 0; i < _entriesCnt; ++i) // I take for sure that _entriesCnt will always be > 0
+		
+		LOG_INFO("Starting to load recipes ...");
+		for(size_t i = 0; i < _entriesCnt; ++i) // I'll take for sure that _entriesCnt will always be > 0
 		{
 			auto _entry = _jar->GetEntry(int(i));
 			if(_entry == nullptr) 
@@ -76,12 +88,13 @@ namespace p95
 
 				// Decompress file and store its content in a struct
 				std::istream* _recipeFile = _entry->GetDecompressionStream();
-
 				if(_recipeFile == nullptr)
 				{
-					printf("NULL\n"); // FIXME: Proper error handling
+					LOG_ERROR("Recipe \"%s\" cannot be loaded", _filename.c_str());
 					continue;
 				}
+
+				LOG_DEBUG("\tLoading raw recipe \"%s\"", _filename.c_str());
 
 				std::string _content(std::istreambuf_iterator<char>(*_recipeFile), { });
 				
@@ -90,7 +103,12 @@ namespace p95
 			}
 		}
 		m_loadedJars.emplace(s_lastLoadedJarFilename);
+
+		LOG_INFO("\n");
+		LOG_INFO("Found %d recipes", m_recipesRaw.size());
+		LOG_INFO("Starting recipes parsing...\n");
 		parse(m_recipesRaw);
+		LOG_INFO("Recipes loaded!");
 		return true;
 	}
 
@@ -101,6 +119,8 @@ namespace p95
 
 	void RecipeLoader::clear()
 	{
+		LOG_INFO("Clearing registry");
+		LOG_DEBUG("\tUnloaded %d recipes", m_recipesRaw.size());
 		m_loadedJars.clear();
 		m_recipesRaw.clear();
 	}
@@ -113,8 +133,6 @@ namespace p95
 	/****************************************************************************/
 	void RecipeLoader::parse(std::vector<Recipe::Raw>& raws)
 	{
-		if(raws.empty()) return; // FIXME: Do proper error handling
-
 		for(auto& rawRecipe : raws)
 		{
 			json _json = json::parse(rawRecipe.content);
@@ -128,6 +146,8 @@ namespace p95
 				_rec.m_raw = rawRecipe;
 				_rec.m_type = _type;
 				_rec.m_name = fs::path(rawRecipe.filename).stem().string();
+
+				LOG_DEBUG("\tParsing recipe \"%s\"", _rec.m_name.c_str());
 
 				std::string _curRec = _rec.m_name;
 
@@ -269,24 +289,25 @@ namespace p95
 				//printRecipe(_rec);
 			}
 		}
+		LOG_INFO("Parsed %d raw recipes", Recipe::m_recipeReg.size());
 	}
 
 	RecipeType RecipeLoader::parseType(const std::string& str)
 	{
-		if(str.empty()) return RecipeType::UNKNOWN;
-		else if(str == "minecraft:crafting_shaped") return RecipeType::SHAPED;
+		if(str.empty())                                return RecipeType::UNKNOWN;
+		else if(str == "minecraft:crafting_shaped")    return RecipeType::SHAPED;
 		else if(str == "minecraft:crafting_shapeless") return RecipeType::SHAPELESS;
-		else if(str == "minecraft:smelting") return RecipeType::SMELTING;
-		else if(str == "minecraft:blasting") return RecipeType::BLASTING;
-		else if(str == "minecraft:campfire_cooking") return RecipeType::CAMPFIRE_COOKING;
-		else if(str == "") return RecipeType::TRANSMUTE;
-		else if(str == "") return RecipeType::SPECIAL;
-		else if(str == "") return RecipeType::DECORATED_POT;
-		else if(str == "") return RecipeType::SMITHING_TRANSFORM;
-		else if(str == "") return RecipeType::SMITHING_TRIM;
-		else if(str == "minecraft:smoking") return RecipeType::SMOKING;
-		else if(str == "minecraft:stonecutting") return RecipeType::STONECUTTING;
-		else return RecipeType::UNKNOWN;
+		else if(str == "minecraft:smelting")           return RecipeType::SMELTING;
+		else if(str == "minecraft:blasting")           return RecipeType::BLASTING;
+		else if(str == "minecraft:campfire_cooking")   return RecipeType::CAMPFIRE_COOKING;
+		//else if(str == "") return RecipeType::TRANSMUTE;
+		//else if(str == "") return RecipeType::SPECIAL;
+		//else if(str == "") return RecipeType::DECORATED_POT;
+		//else if(str == "") return RecipeType::SMITHING_TRANSFORM;
+		//else if(str == "") return RecipeType::SMITHING_TRIM;
+		else if(str == "minecraft:smoking")            return RecipeType::SMOKING;
+		else if(str == "minecraft:stonecutting")       return RecipeType::STONECUTTING;
+		else                                           return RecipeType::UNKNOWN;
 	}
 
 	std::string RecipeLoader::clearItemName(const std::string& name)

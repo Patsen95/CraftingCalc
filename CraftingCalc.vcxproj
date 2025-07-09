@@ -106,6 +106,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)libs\ZipLib;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,6 +126,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)libs\ZipLib;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -144,6 +146,7 @@
     <ClCompile Include="libs\ui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="libs\ui\imgui_tables.cpp" />
     <ClCompile Include="libs\ui\imgui_widgets.cpp" />
+    <ClCompile Include="logging.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="recipe.cpp" />
     <ClCompile Include="recipeItem.cpp" />
@@ -162,6 +165,7 @@
     <ClInclude Include="libs\ui\imstb_rectpack.h" />
     <ClInclude Include="libs\ui\imstb_textedit.h" />
     <ClInclude Include="libs\ui\imstb_truetype.h" />
+    <ClInclude Include="logging.h" />
     <ClInclude Include="recipe.h" />
     <ClInclude Include="recipeItem.h" />
     <ClInclude Include="recipeItemList.h" />

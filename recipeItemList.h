@@ -16,7 +16,9 @@ namespace p95
 		void add(const RecipeItem& item);
 		void remove(size_t idx);
 		void remove(const char* id);
+
 		void clear();
+
 
 		RecipeItem& getItem(size_t idx);
 		RecipeItem& getItem(const char* id);

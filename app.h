@@ -4,6 +4,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "recipeLoader.h"
+#include "logging.h"
 
 #include <stdio.h>
 //#define GL_SILENCE_DEPRECATION
@@ -43,6 +44,7 @@ namespace p95
 		std::string m_version;
 
 		bool m_dbgMode;
+
 
 	private:
 		void drawMainUI();

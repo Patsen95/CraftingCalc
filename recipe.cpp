@@ -151,20 +151,20 @@ namespace p95
 	{
 		switch(type)
 		{
-			case RecipeType::SHAPED: return "SHAPED";
-			case RecipeType::SHAPELESS: return "SHAPELESS";
-			case RecipeType::SMELTING: return "SMELTING";
-			case RecipeType::BLASTING: return "BLASTING";
-			case RecipeType::CAMPFIRE_COOKING: return "CAMPFIRE_COOKING";
-			case RecipeType::TRANSMUTE: return "TRANSMUTE";
-			case RecipeType::SPECIAL: return "SPECIAL";
-			case RecipeType::DECORATED_POT: return "DECORATED_POT";
+			case RecipeType::SHAPED:             return "SHAPED";
+			case RecipeType::SHAPELESS:          return "SHAPELESS";
+			case RecipeType::SMELTING:           return "SMELTING";
+			case RecipeType::BLASTING:           return "BLASTING";
+			case RecipeType::CAMPFIRE_COOKING:   return "CAMPFIRE_COOKING";
+			case RecipeType::TRANSMUTE:          return "TRANSMUTE";
+			case RecipeType::SPECIAL:            return "SPECIAL";
+			case RecipeType::DECORATED_POT:      return "DECORATED_POT";
 			case RecipeType::SMITHING_TRANSFORM: return "SMITHING_TRANSFORM";
-			case RecipeType::SMITHING_TRIM: return "SMITHING_TRIM";
-			case RecipeType::SMOKING: return "SMOKING";
-			case RecipeType::STONECUTTING: return "STONECUTTING";
+			case RecipeType::SMITHING_TRIM:      return "SMITHING_TRIM";
+			case RecipeType::SMOKING:            return "SMOKING";
+			case RecipeType::STONECUTTING:       return "STONECUTTING";
 			case RecipeType::UNKNOWN:
-			default: return "UNKNOWN";
+			default:                             return "UNKNOWN";
 		}
 	}
 
@@ -172,12 +172,12 @@ namespace p95
 	{
 		switch(cat)
 		{
-			case RecipeCategory::MISC: return "MISC";
-			case RecipeCategory::BUILDING: return "BUILDING";
+			case RecipeCategory::MISC:      return "MISC";
+			case RecipeCategory::BUILDING:  return "BUILDING";
 			case RecipeCategory::EQUIPMENT: return "EQUIPMENT";
-			case RecipeCategory::REDSTONE: return "REDSTONE";
+			case RecipeCategory::REDSTONE:  return "REDSTONE";
 			case RecipeCategory::NONE:
-			default: return "NONE";
+			default:                        return "NONE";
 		}
 	}
 

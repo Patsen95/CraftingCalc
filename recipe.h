@@ -8,6 +8,7 @@
 #include "recipeItemList.h"
 
 
+
 namespace p95
 {
 	enum class RecipeType : char
@@ -27,7 +28,7 @@ namespace p95
 		STONECUTTING
 	};
 
-	// NOTE: Contains only shaped and shapeless crafting categories
+	// NOTE: Contains only shaped and shapeless categories
 	enum class RecipeCategory : char
 	{
 		NONE = 0,
@@ -48,10 +49,11 @@ namespace p95
 		};
 
 	public:
-		Recipe();
 
-		// Raw name (Minecraft format)
-		const std::string getName() const;
+		Recipe();
+		~Recipe();
+		
+		const std::string getName() const; // Raw name (Minecraft format)
 		const std::string getDisplayName() const;
 		const std::string getOutputItemName() const;
 		const RecipeType getType() const;

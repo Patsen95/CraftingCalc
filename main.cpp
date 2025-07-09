@@ -1,5 +1,8 @@
 #include "app.h"
 
+#ifdef _DEBUG
+#include <iostream>
+#endif
 
 
 // Such a smoooooth main
@@ -10,6 +13,10 @@ int main()
     app.initUI();
     app.loop();
     app.shutdown();
+    
+#ifdef _DEBUG
+    std::cin.get();
+#endif
 
     return 0;
 }

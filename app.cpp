@@ -63,7 +63,7 @@ namespace p95
 
 	static std::string currentSelectionName = "";
 #else
-	static void glfw_error_callback(int error, const char* description) {}
+	static void glfw_error_callback(int error, const char* description) { }
 #endif
 
 
@@ -77,24 +77,35 @@ namespace p95
 #endif
 
 	/*********************************************************************/
-	App::App()
+	App::App() :
+		m_window(nullptr),
+		m_io(nullptr),
+		m_windowSize(SIZE_WINDOW),
+		m_frameBufWidth(0),
+		m_frameBufHeight(0),
+		m_clearColor(ImVec4()),
+		m_uiStyle(nullptr),
+		m_fontMain(nullptr),
+		m_fontMedium(nullptr),
+		m_fontLarge(nullptr),
+		m_fontFooter(nullptr),
+		m_version("pre-1.0 (alpha)"),
+		m_dbgMode(false)
 	{
-		m_window = nullptr;
-		m_io = nullptr;
-		m_windowSize = SIZE_WINDOW;
-		m_frameBufWidth = 0;
-		m_frameBufHeight = 0;
-		m_clearColor = ImVec4();
-		m_uiStyle = nullptr;
-		m_fontMain = nullptr;
-		m_fontMedium = nullptr;
-		m_fontFooter = nullptr;
-		m_dbgMode = false;
-		m_version = "pre-1.0 (alpha)";
+		Logger::init();
+		Logger::includeTimestamp(true);
+		Logger::useFiltering(true);
+		Logger::setTag("AppInit");
 
 #ifdef _DEBUG
+		Logger::setMinLogLevel(Logger::LogLevel::DEBUG);
+		Logger::loggingToConsole(true);
+
 		m_appTitle = "Crafting Calc [DEBUG]";
+		LOG_INFO("Launching app in DEBUG mode");
 #else
+		Logger::loggingToConsole(false);
+		Logger::disable() // TODO: Change this at releasing
 		m_appTitle = std::string("Crafting Calc") + m_version;
 #endif
 	}
@@ -103,9 +114,14 @@ namespace p95
 
 	int App::initUI()
 	{
+		LOG_INFO("Initializing UI");
+
 		glfwSetErrorCallback(glfw_error_callback);
 		if(!glfwInit())
+		{
+			LOG_ERROR("GLFW error! Check log!");
 			return 1;
+		}
 
 		// GL 3.0 + GLSL 130
 		const char* glsl_version = "#version 130";
@@ -113,12 +129,21 @@ namespace p95
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
+		LOG_INFO("Creating window");
 		m_window = glfwCreateWindow(m_windowSize.x, m_windowSize.y, m_appTitle.c_str(), nullptr, nullptr);
-		if(m_window == nullptr)
+		if(!m_window)
+		{
+			LOG_ERROR("Cannot create window object!");
 			return 1;
+		}
 
+		LOG_INFO("OpenGL init");
 		glfwMakeContextCurrent(m_window);
+		
+		LOG_INFO("\n\n\tGLSL: %s\n\tGraphics: %s (%s)\n\tRenderer: %s\n", glsl_version, glGetString(GL_VERSION), glGetString(GL_VENDOR), glGetString(GL_RENDERER));
+		
 		glfwSwapInterval(1); // VSync
+		LOG_INFO("VSync enabled");
 
 		IMGUI_CHECKVERSION();
 		imgui::CreateContext();
@@ -128,11 +153,13 @@ namespace p95
 
 		imgui::StyleColorsDark();
 		m_uiStyle = &imgui::GetStyle();
+
 		initStylesAndAssets();
 
 		ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 		ImGui_ImplOpenGL3_Init(glsl_version);
-			
+
+		LOG_INFO("UI init done");
 		return 0;
 	}
 
@@ -160,17 +187,23 @@ namespace p95
 		m_uiStyle->Colors[ImGuiCol_ButtonHovered] = _btnHover;
 		m_uiStyle->Colors[ImGuiCol_ButtonActive] = _btnClick;
 
-		// FIXME: Add neccessary null checks
 		// Loading fonts
-		m_io->Fonts->AddFontDefault();
+		LOG_INFO("Loading external assets");
 		m_fontMain = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 14);
 		m_fontMedium = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 20);
 		m_fontLarge = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 28);
 		m_fontFooter = m_io->Fonts->AddFontFromFileTTF("assets/fonts/Inter-Medium.ttf", 12);
+
+		if(!(m_fontMain && m_fontMedium && m_fontLarge && m_fontFooter))
+		{
+			LOG_WARNING("Cannot load external fonts. Loading ImGui default font set");
+			m_io->Fonts->AddFontDefault();
+		}
 	}
 
 	int App::loop()
 	{
+		LOG_INFO("Starting main loop");
 		while(!glfwWindowShouldClose(m_window))
 		{
 			glfwPollEvents();
@@ -201,6 +234,7 @@ namespace p95
 
 	void App::shutdown()
 	{
+		LOG_INFO("Shutting down...");
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		imgui::DestroyContext();

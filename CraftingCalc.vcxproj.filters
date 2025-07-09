@@ -36,6 +36,9 @@
     <ClCompile Include="recipeItemList.cpp">
       <Filter>Recipe</Filter>
     </ClCompile>
+    <ClCompile Include="logging.cpp">
+      <Filter>Logging</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
@@ -81,6 +84,9 @@
     <ClInclude Include="recipeItemList.h">
       <Filter>Recipe</Filter>
     </ClInclude>
+    <ClInclude Include="logging.h">
+      <Filter>Logging</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Deps">
@@ -91,6 +97,9 @@
     </Filter>
     <Filter Include="Recipe">
       <UniqueIdentifier>{4116bfba-93f6-4b33-9ded-874e40ef8e77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logging">
+      <UniqueIdentifier>{4c064722-cb33-4a20-a64d-d272e6d0a84c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

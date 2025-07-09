@@ -2,6 +2,7 @@
 .vs
 Obj
 Bin/x64/Debug
+Bin/x64/Release
 CraftingCalc/x64
 x64/Debug
 
