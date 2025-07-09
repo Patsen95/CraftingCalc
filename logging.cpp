@@ -82,6 +82,13 @@ namespace p95
 	{
 		if(!m_enabled) return;
 		if(m_useFiltering && m_globalLvl < m_minLogLevel) return;
+
+		if(fmt == "\n")
+		{
+			std::printf("\033[0m\n");
+			return;
+		}
+
 		if(m_toConsole)
 		{
 			std::printf("%s", levelToColor(m_globalLvl));
@@ -125,6 +132,13 @@ namespace p95
 	{
 		if(!m_enabled) return;
 		if(m_useFiltering && lvl < m_minLogLevel) return;
+
+		if(fmt == "\n")
+		{
+			std::printf("\033[0m\n");
+			return;
+		}
+
 		if(m_toConsole)
 		{
 			std::printf("%s", levelToColor(lvl));

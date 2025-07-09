@@ -73,4 +73,10 @@ namespace p95
 		static const char* levelToColor(LogLevel lvl);
 		static const char* levelToStr(LogLevel lvl);
 	};
+
+#define LOG_INFO(...)    (Logger::log(Logger::LogLevel::INFO, __VA_ARGS__));
+#define LOG_WARNING(...) (Logger::log(Logger::LogLevel::WARNING, __VA_ARGS__));
+#define LOG_ERROR(...)   (Logger::log(Logger::LogLevel::ERR, __VA_ARGS__));
+#define LOG_DEBUG(...)   (Logger::log(Logger::LogLevel::DEBUG, __VA_ARGS__));
+#define LOG_TRACE(...)   (Logger::log(Logger::LogLevel::VERBOSE, __VA_ARGS__));
 }
