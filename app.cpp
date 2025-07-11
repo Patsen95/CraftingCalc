@@ -105,8 +105,7 @@ namespace p95
 		LOG_INFO("Launching app in DEBUG mode");
 #else
 		Logger::loggingToConsole(false);
-		Logger::disable() // TODO: Change this at releasing
-		m_appTitle = std::string("Crafting Calc") + m_version;
+		m_appTitle = std::string("Crafting Calc ") + m_version;
 #endif
 	}
 
@@ -229,6 +228,7 @@ namespace p95
 
 			glfwSwapBuffers(m_window);
 		}
+		LOG_INFO("Closing window");
 		return 0;
 	}
 
@@ -279,8 +279,9 @@ namespace p95
 					/****** CLEAR RECIPES ******/
 					if(imgui::Button("C", ImVec2(20, 20)))
 					{
-						RecipeLoader::clear();
 						Recipe::clear();
+						RecipeLoader::clear();
+						currentRecipe = nullptr;
 					}
 #endif
 					/****** BUTTONS ******/

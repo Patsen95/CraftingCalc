@@ -6,7 +6,7 @@
 #include <iostream>
 
 #ifdef _MSVC_LANG
-#pragma warning(disable:4996)
+#pragma warning(disable:4996) // MSVC is whining about "unsafe" use of ctime header functions, so we need to shut him up
 #endif
 
 
@@ -36,6 +36,7 @@ namespace p95
 		static void init();
 		static void enable();
 		static void disable();
+
 		static void includeTimestamp(bool state = true);
 		static void useRelativeTimestamps(bool state = false);
 		static void loggingToConsole(bool state = true);

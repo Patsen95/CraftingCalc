@@ -1,4 +1,5 @@
 #include "recipeItemList.h"
+#include "logging.h"
 
 #include <algorithm>
 
@@ -33,6 +34,8 @@ namespace p95
 
 	void RecipeItemList::clear()
 	{
+		if(m_itemList.empty()) return;
+		LOG_DEBUG("[RecipeItemList] Removed %d stored items", m_itemList.size());
 		m_itemList.clear();
 	}
 

@@ -1,7 +1,7 @@
 #include "recipe.h"
+#include "logging.h"
 
 #include "json.hpp"
-
 
 #include <fstream>
 #include <filesystem>
@@ -93,7 +93,10 @@ namespace p95
 	/****************************************************************************/
 	void Recipe::clear()
 	{
+		if(m_recipeReg.empty()) return;
+		LOG_DEBUG("[Recipe] Removed %d stored recipes", m_recipeReg.size());
 		m_recipeReg.clear();
+		std::vector<Recipe>().swap(m_recipeReg);
 	}
 
 	size_t Recipe::getCount()

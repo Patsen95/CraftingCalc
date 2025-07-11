@@ -106,7 +106,7 @@ namespace p95
 
 		LOG_INFO("\n");
 		LOG_INFO("Found %d recipes", m_recipesRaw.size());
-		LOG_INFO("Starting recipes parsing...\n");
+		LOG_INFO("Starting parsing recipes...\n");
 		parse(m_recipesRaw);
 		LOG_INFO("Recipes loaded!");
 		return true;
@@ -119,10 +119,11 @@ namespace p95
 
 	void RecipeLoader::clear()
 	{
-		LOG_INFO("Clearing registry");
-		LOG_DEBUG("\tUnloaded %d recipes", m_recipesRaw.size());
+		if(m_recipesRaw.empty()) return;
+		LOG_DEBUG("\tRemoved %d recipes", m_recipesRaw.size());
 		m_loadedJars.clear();
 		m_recipesRaw.clear();
+		std::vector<Recipe::Raw>().swap(m_recipesRaw);
 	}
 
 	size_t RecipeLoader::getLoadedJarsCount()
