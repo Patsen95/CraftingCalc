@@ -121,14 +121,8 @@ namespace p95
 	void Logger::_log(LogLevel lvl, const char* tag, const char* fmt, va_list args)
 	{
 		if(!m_enabled) return;
+		if(fmt == "\n") return;
 		if(m_useFiltering && lvl < m_minLogLevel) return;
-
-		if(fmt == "\n")
-		{
-			std::printf("\033[0m\n");
-			return;
-		}
-
 		if(m_toConsole)
 		{
 			std::printf("%s", levelToColor(lvl));
