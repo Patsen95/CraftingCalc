@@ -1,7 +1,5 @@
 #include "logging.h"
 
-#include <cstdarg>
-
 
 
 namespace p95
@@ -15,7 +13,7 @@ namespace p95
 	Logger::LogLevel Logger::m_globalLvl = Logger::LogLevel::INFO;
 	Logger::LogLevel Logger::m_minLogLevel = Logger::LogLevel::ERR;
 
-	std::string Logger::m_currentTag = "";
+	std::string Logger::m_globalTag = "";
 	std::time_t Logger::m_startTime = NULL;
 	//std::vector<Record> m_logBuffer;
 
@@ -29,12 +27,12 @@ namespace p95
 	void Logger::enable()
 	{
 		m_enabled = true;
-		log(LogLevel::WARNING, "Logger enabled");
+		LOG_WARNING_T("LOGGER", "Logger enabled");
 	}
 
 	void Logger::disable()
 	{
-		log(LogLevel::WARNING, "Logger disabled");
+		LOG_WARNING_T("LOGGER", "Logger disabled");
 		m_enabled = false;
 	}
 
@@ -53,14 +51,14 @@ namespace p95
 		m_toConsole = state;
 	}
 
-	void Logger::useTag(bool state)
+	void Logger::useTags(bool state)
 	{
 		m_useTags = state;
 	}
 
-	void Logger::setTag(const char* tag)
+	void Logger::setGlobalTag(const char* tag)
 	{
-		m_currentTag = tag;
+		m_globalTag = tag;
 	}
 
 	void Logger::useFiltering(bool state)
@@ -80,55 +78,47 @@ namespace p95
 
 	void Logger::log(const char* fmt, ...)
 	{
-		if(!m_enabled) return;
-		if(m_useFiltering && m_globalLvl < m_minLogLevel) return;
+		va_list args;
+		va_start(args, fmt);
+		_log(m_globalLvl, "", fmt, args);
+		va_end(args);
+		std::printf("\033[0m\n");
+	}
 
-		if(fmt == "\n")
-		{
-			std::printf("\033[0m\n");
-			return;
-		}
-
-		if(m_toConsole)
-		{
-			std::printf("%s", levelToColor(m_globalLvl));
-			if(m_includeTimestamp)
-			{
-				std::time_t _currentTime = std::time(NULL);
-				std::tm _dt = { };
-
-				if(m_relativeTimestamps)
-				{
-					std::time_t _timeDiff = std::difftime(m_startTime, _currentTime) * -1; // difftime returns negative value
-					_dt = *std::localtime(&_timeDiff);
-					_dt.tm_hour = 0;
-				}
-				else
-					_dt = *std::localtime(&_currentTime);
-
-				if(m_useTags && !m_currentTag.empty())
-					std::printf("[%s] [%s] [%s] ", timeToStr(_dt).c_str(), levelToStr(m_globalLvl), m_currentTag.c_str());
-				else
-					std::printf("[%s] [%s] ", timeToStr(_dt).c_str(), levelToStr(m_globalLvl));
-
-			}
-			else
-			{
-				if(m_useTags && !m_currentTag.empty())
-					std::printf("[%s] [%s] ", levelToStr(m_globalLvl), m_currentTag.c_str());
-				else
-					std::printf("[%s] ", levelToStr(m_globalLvl));
-			}
-
-			va_list args;
-			va_start(args, fmt);
-			std::vprintf(fmt, args);
-			va_end(args);
-			std::printf("\033[0m\n");
-		}
+	void Logger::log(const char* tag, const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		_log(m_globalLvl, tag, fmt, args);
+		va_end(args);
+		std::printf("\033[0m\n");
 	}
 
 	void Logger::log(LogLevel lvl, const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		_log(lvl, "", fmt, args);
+		va_end(args);
+		std::printf("\033[0m\n");
+	}
+
+	void Logger::log(LogLevel lvl, const char* tag, const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		_log(lvl, tag, fmt, args);
+		va_end(args);
+		std::printf("\033[0m\n");
+	}
+
+	bool Logger::enabled()
+	{
+		return m_enabled;
+	}
+
+	/****************************************************************************/
+	void Logger::_log(LogLevel lvl, const char* tag, const char* fmt, va_list args)
 	{
 		if(!m_enabled) return;
 		if(m_useFiltering && lvl < m_minLogLevel) return;
@@ -156,33 +146,32 @@ namespace p95
 				else
 					_dt = *std::localtime(&_currentTime);
 
-				if(m_useTags && !m_currentTag.empty())
-					std::printf("[%s] [%s] [%s] ", timeToStr(_dt).c_str(), levelToStr(lvl), m_currentTag.c_str());
+				if(m_useTags && (!std::string(tag).empty() || !m_globalTag.empty()))
+				{
+					if(std::string(tag).empty())
+						std::printf("[%s] [%s] [%s] ", timeToStr(_dt).c_str(), levelToStr(lvl), m_globalTag.c_str());
+					else
+						std::printf("[%s] [%s] [%s] ", timeToStr(_dt).c_str(), levelToStr(lvl), tag);
+				}
 				else
 					std::printf("[%s] [%s] ", timeToStr(_dt).c_str(), levelToStr(lvl));
 			}
 			else
 			{
-				if(m_useTags && !m_currentTag.empty())
-					std::printf("[%s] [%s] ", levelToStr(lvl), m_currentTag.c_str());
+				if(m_useTags && (!std::string(tag).empty() || !m_globalTag.empty()))
+				{
+					if(std::string(tag).empty())
+						std::printf("[%s] [%s] ", levelToStr(lvl), m_globalTag.c_str());
+					else
+						std::printf("[%s] [%s] ", levelToStr(lvl), tag);
+				}
 				else
 					std::printf("[%s] ", levelToStr(lvl));
 			}
-
-			va_list args;
-			va_start(args, fmt);
 			std::vprintf(fmt, args);
-			va_end(args);
-			std::printf("\033[0m\n");
 		}
 	}
 
-	bool Logger::enabled()
-	{
-		return m_enabled;
-	}
-
-	/****************************************************************************/
 	// NOTE: returns ONLY time value in 24-hour format
 	std::string Logger::timeToStr(const std::tm& time)
 	{
@@ -198,8 +187,8 @@ namespace p95
 			case LogLevel::WARNING: return "\033[33m"; // yellow
 			case LogLevel::ERR:		return "\033[31m"; // red
 			case LogLevel::DEBUG:   return "\033[36m"; // cyan
-			case LogLevel::VERBOSE:   return "\033[95m"; // magenta
-			default: return "\033[0m";  // white
+			case LogLevel::VERBOSE: return "\033[95m"; // magenta
+			default:                return "\033[0m";  // white
 		}
 	}
 
@@ -208,10 +197,10 @@ namespace p95
 		switch(lvl)
 		{
 			default:
-			case LogLevel::INFO: return "INFO";
+			case LogLevel::INFO:    return "INFO";
 			case LogLevel::WARNING: return "WARNING";
-			case LogLevel::ERR: return "ERROR";
-			case LogLevel::DEBUG: return "DEBUG";
+			case LogLevel::ERR:     return "ERROR";
+			case LogLevel::DEBUG:   return "DEBUG";
 			case LogLevel::VERBOSE: return "VERBOSE";
 		}
 	}
