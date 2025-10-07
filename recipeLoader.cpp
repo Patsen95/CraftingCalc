@@ -3,6 +3,7 @@
 #include "ZipFile.h"
 #include "json.hpp"
 #include "logging.h"
+#include "libs/stb/stb_image.h"
 
 #include <fstream>
 #include <filesystem>
@@ -12,15 +13,11 @@
 namespace p95
 {
 	// DEBUG
-	const char* JAR_PATH = "E:/MinecraftForge/Install/versions/1.19.2/1.19.2.jar";
-	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/1.21.5/1.21.5.jar";
+	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/1.19.2/1.19.2.jar";
+	const char* JAR_PATH = "E:/MinecraftForge/Install/versions/1.21.5/1.21.5.jar";
 	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/forge-43.4.0/forge-43.4.0.jar";
 	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/neoforge-20.4.239/neoforge-20.4.239.jar";
 	//const char* JAR_PATH = "E:/MinecraftForge/Install/versions/neoforge-21.1.133/neoforge-21.1.133.jar";
-	// 
-	//const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/neoforge-21.1.133/neoforge-21.1.133.jar";
-	//const char* JAR_PATH = "C:/Users/patse/curseforge/minecraft/Install/versions/1.21.4/1.21.4.jar";
-
 
 
 	using json = nlohmann::json;
@@ -40,7 +37,7 @@ namespace p95
 	bool RecipeLoader::loadJar(const char* path)
 	{
 		path = JAR_PATH; // DEBUG
-		Logger::setTag("RecipeLoader");
+		Logger::setGlobalTag("RecipeLoader");
 
 		if(!fs::exists(path))
 		{
@@ -112,15 +109,16 @@ namespace p95
 		return true;
 	}
 
-	const char* RecipeLoader::getJarFilename()
+	const char* RecipeLoader::getJarFilename(size_t idx)
 	{
-		return s_lastLoadedJarFilename.c_str();
+		return (*std::next(m_loadedJars.begin(), idx)).c_str();
+		//return s_lastLoadedJarFilename.c_str();
 	}
 
 	void RecipeLoader::clear()
 	{
 		if(m_recipesRaw.empty()) return;
-		LOG_DEBUG("\tRemoved %d recipes", m_recipesRaw.size());
+		LOG_DEBUG_T("RecipeLoader", "\tRemoved %d recipes", m_recipesRaw.size());
 		m_loadedJars.clear();
 		m_recipesRaw.clear();
 		std::vector<Recipe::Raw>().swap(m_recipesRaw);
@@ -134,6 +132,7 @@ namespace p95
 	/****************************************************************************/
 	void RecipeLoader::parse(std::vector<Recipe::Raw>& raws)
 	{
+		Logger::setGlobalTag("RecipeLoader");
 		for(auto& rawRecipe : raws)
 		{
 			json _json = json::parse(rawRecipe.content);
@@ -213,7 +212,7 @@ namespace p95
 				}
 				else if(_type == RecipeType::SHAPELESS)
 				{
-					const std::array<char, 21> _constKeys = { // TODO: Randomize all
+					const std::array<char, 21> _constKeys = { // TODO: Maybe randomize
 						'@', '#' ,'!', '$', '%', '^', '&', 
 						'~', '+', '=', '<', '>', '/', '\\', 
 						'{', '}', '[', ']', ';', '*', '?' 
@@ -232,7 +231,7 @@ namespace p95
 							else _id = clearItemName(item);
 
 							// Some items can repeat, so we can assign same key character to them
-							 if(_rec.m_ingredients.count() > 1 && _id == _rec.m_ingredients.last().getId())
+							if(_rec.m_ingredients.count() >= 1 && _id == _rec.m_ingredients.last().getId())
 								_ritem.setKey(_rec.m_ingredients.getItem(_itmCnt - 1).getKey());
 							else
 								_ritem.setKey(_constKeys[_itmCnt]);
@@ -280,14 +279,12 @@ namespace p95
 				else
 					_rec.m_outputItemName = clearItemName(_json["result"]["item"]);
 
-				if(_json["result"]["count"].is_null() == false)
-					_rec.m_outputCount = _json["result"]["count"];
-				else
+				if(_json["result"]["count"].is_null())
 					_rec.m_outputCount = 1;
+				else
+					_rec.m_outputCount = _json["result"]["count"];
 
 				Recipe::m_recipeReg.emplace_back(_rec);
-
-				//printRecipe(_rec);
 			}
 		}
 		LOG_INFO("Parsed %d raw recipes", Recipe::m_recipeReg.size());
@@ -314,5 +311,63 @@ namespace p95
 	std::string RecipeLoader::clearItemName(const std::string& name)
 	{
 		return name.substr(name.find(':') + 1, name.length());
+	}
+
+	bool RecipeLoader::loadImgFromMemory(const void* data, size_t dataSize, GLuint* outTexture, int* outWidth, int* outHeight)
+	{
+		Logger::setGlobalTag("RecipeLoader");
+		int imageWidth = 0;
+		int imageHeight = 0;
+		unsigned char* imageData = stbi_load_from_memory((const unsigned char*)data, (int)dataSize, &imageWidth, &imageHeight, NULL, 4);
+		if(imageData == NULL)
+		{
+			LOG_ERROR("Cannot load an image!");
+			return false;
+		}
+
+		// Create a OpenGL texture ID
+		GLuint imageTexture;
+		glGenTextures(1, &imageTexture);
+		glBindTexture(GL_TEXTURE_2D, imageTexture);
+
+		// Setup filtering parameters for display
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		// Upload pixels into texture
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+		stbi_image_free(imageData);
+
+		*outTexture = imageTexture;
+		*outWidth = imageWidth;
+		*outHeight = imageHeight;
+
+		return true;
+	}
+
+	bool RecipeLoader::loadImgFromFile(const char* filename, GLuint* outTexture, int* outWidth, int* outHeight)
+	{
+		Logger::setGlobalTag("RecipeLoader");
+		FILE* f = fopen(filename, "rb");
+		if(f == NULL)
+		{
+			LOG_ERROR("Path or image file does not exist");
+			return false;
+		}
+		fseek(f, 0, SEEK_END);
+		size_t fileSize = (size_t)ftell(f);
+		if(fileSize == -1)
+		{
+			LOG_ERROR("Cannot read an image (corrupted file?)");
+			return false;
+		}
+		fseek(f, 0, SEEK_SET);
+		void* fileData = malloc(fileSize);
+		fread(fileData, 1, fileSize, f);
+		fclose(f);
+		bool ret = loadImgFromMemory(fileData, fileSize, outTexture, outWidth, outHeight);
+		free(fileData);
+		return ret;
 	}
 }
