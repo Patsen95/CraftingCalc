@@ -39,6 +39,12 @@
     <ClCompile Include="logging.cpp">
       <Filter>Logging</Filter>
     </ClCompile>
+    <ClCompile Include="errorHandler.cpp">
+      <Filter>ErrorHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="resourceManager.cpp">
+      <Filter>ResourceManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
@@ -87,6 +93,15 @@
     <ClInclude Include="logging.h">
       <Filter>Logging</Filter>
     </ClInclude>
+    <ClInclude Include="errorHandler.h">
+      <Filter>ErrorHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="resourceManager.h">
+      <Filter>ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="debugInfo.h">
+      <Filter>DebugInfo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Deps">
@@ -100,6 +115,15 @@
     </Filter>
     <Filter Include="Logging">
       <UniqueIdentifier>{4c064722-cb33-4a20-a64d-d272e6d0a84c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ErrorHandler">
+      <UniqueIdentifier>{dc5d4529-26ec-4681-ac14-53bba8fc9a70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ResourceManager">
+      <UniqueIdentifier>{f2c2cfb3-4c5c-4005-bb29-52f1acd435db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DebugInfo">
+      <UniqueIdentifier>{c96d0892-ec6d-4ec9-a265-d1a8034abd52}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

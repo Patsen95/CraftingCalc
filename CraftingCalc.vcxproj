@@ -107,6 +107,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)libs\ZipLib;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,6 +128,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)libs\ZipLib;$(ProjectDir)libs\ui\glfw\include;$(ProjectDir)libs\ui;$(ProjectDir)libs\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="errorHandler.cpp" />
     <ClCompile Include="libs\ui\imgui.cpp" />
     <ClCompile Include="libs\ui\imgui_demo.cpp" />
     <ClCompile Include="libs\ui\imgui_draw.cpp" />
@@ -153,8 +156,11 @@
     <ClCompile Include="recipeItemList.cpp" />
     <ClCompile Include="recipeLoader.cpp" />
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="resourceManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="debugInfo.h" />
+    <ClInclude Include="errorHandler.h" />
     <ClInclude Include="libs\json\json.hpp" />
     <ClInclude Include="libs\ui\imconfig.h" />
     <ClInclude Include="libs\ui\imgui.h" />
@@ -171,6 +177,7 @@
     <ClInclude Include="recipeItemList.h" />
     <ClInclude Include="recipeLoader.h" />
     <ClInclude Include="app.h" />
+    <ClInclude Include="resourceManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

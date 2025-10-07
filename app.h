@@ -1,14 +1,14 @@
 #pragma once
+
+#include <stdio.h>
+#include <string>
+
+//#define GL_SILENCE_DEPRECATION
+#include <GLFW/glfw3.h>
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
-#include "recipeLoader.h"
-#include "logging.h"
-
-#include <stdio.h>
-//#define GL_SILENCE_DEPRECATION
-#include <GLFW/glfw3.h>
 
 
 
@@ -19,6 +19,7 @@ namespace p95
 	class App
 	{
 	public:
+
 		App();
 		~App();
 		
@@ -27,11 +28,14 @@ namespace p95
 		void shutdown();
 
 	private:
+
 		GLFWwindow* m_window;
 		ImGuiIO* m_io;
+		ImDrawList* m_drawList;
 		ImGuiStyle* m_uiStyle;
 
 		ImVec2 m_windowSize;
+		ImVec2 m_currentSpaceRegion;
 		int m_frameBufWidth;
 		int m_frameBufHeight;
 		ImVec4 m_clearColor;
@@ -43,15 +47,22 @@ namespace p95
 		std::string m_appTitle;
 		std::string m_version;
 
-		bool m_dbgMode;
+		bool m_dbgMode;		
 
 
 	private:
-		void drawMainUI();
-		void drawDebugUI();
+
 		void initStylesAndAssets();
+
+		// Drawing stuff
+		void drawMainUI();
+		void drawDebugButtons();
+		void drawLeftPanel();
+		void drawMainPanel();
+		void drawDebugUI();
+		
 		bool showWindowAddSource();
 		std::string showOpenFileDialog();
-		std::string showBrowseDirDialog();
+		//std::string showBrowseDirDialog();
 	};
 }
