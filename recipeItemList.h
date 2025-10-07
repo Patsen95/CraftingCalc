@@ -11,6 +11,7 @@ namespace p95
 	class RecipeItemList
 	{
 	public:
+
 		RecipeItemList();
 
 		void add(const RecipeItem& item);
@@ -34,15 +35,17 @@ namespace p95
 		bool operator>=(const RecipeItemList& other) const;
 		bool operator<=(const RecipeItemList& other) const;
 
-		const RecipeItem& first() const;
-		const RecipeItem& last() const;
+		const RecipeItem& first() const noexcept;
+		const RecipeItem& last() const noexcept;
 
-		std::vector<RecipeItem>::iterator begin();
-		std::vector<RecipeItem>::iterator end();
-		std::vector<RecipeItem>::reverse_iterator rbegin();
-		std::vector<RecipeItem>::reverse_iterator rend();
-		std::vector<RecipeItem>::const_iterator cbegin() const;
-		std::vector<RecipeItem>::const_iterator cend() const;
+		std::vector<RecipeItem>::iterator begin() noexcept;
+		std::vector<RecipeItem>::const_iterator begin() const noexcept;
+		std::vector<RecipeItem>::iterator end() noexcept;
+		std::vector<RecipeItem>::const_iterator end() const noexcept;
+		std::vector<RecipeItem>::const_iterator cbegin() const noexcept;
+		std::vector<RecipeItem>::const_iterator cend() const noexcept;
+		std::vector<RecipeItem>::reverse_iterator rbegin() noexcept;
+		std::vector<RecipeItem>::reverse_iterator rend() noexcept;
 
 	private:
 		std::vector<RecipeItem> m_itemList;

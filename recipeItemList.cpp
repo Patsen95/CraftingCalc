@@ -35,7 +35,7 @@ namespace p95
 	void RecipeItemList::clear()
 	{
 		if(m_itemList.empty()) return;
-		LOG_DEBUG("[RecipeItemList] Removed %d stored items", m_itemList.size());
+		LOG_DEBUG_T("RecipeItemList", "Removed %d stored items", m_itemList.size());
 		m_itemList.clear();
 	}
 
@@ -105,43 +105,53 @@ namespace p95
 		return !(this > &other);
 	}
 
-	const RecipeItem& RecipeItemList::first() const
+	const RecipeItem& RecipeItemList::first() const noexcept
 	{
 		return m_itemList.front();
 	}
 
-	const RecipeItem& RecipeItemList::last() const
+	const RecipeItem& RecipeItemList::last() const noexcept
 	{
 		return m_itemList.back();
 	}
 
-	std::vector<RecipeItem>::iterator RecipeItemList::begin()
+	std::vector<RecipeItem>::iterator RecipeItemList::begin() noexcept
+	{
+		return m_itemList.begin();
+	}
+
+	std::vector<RecipeItem>::const_iterator RecipeItemList::begin() const noexcept
 	{
 		return m_itemList.begin();
 	}
 		
-	std::vector<RecipeItem>::iterator RecipeItemList::end()
+	std::vector<RecipeItem>::iterator RecipeItemList::end() noexcept
 	{
 		return m_itemList.end();
 	}
 
-	std::vector<RecipeItem>::reverse_iterator RecipeItemList::rbegin() 
-	{ 
-		return m_itemList.rbegin();
+	std::vector<RecipeItem>::const_iterator RecipeItemList::end() const noexcept
+	{
+		return m_itemList.end();
 	}
 
-	std::vector<RecipeItem>::reverse_iterator RecipeItemList::rend() 
-	{ 
-		return m_itemList.rend();
-	}
-
-	std::vector<RecipeItem>::const_iterator RecipeItemList::cbegin() const
+	std::vector<RecipeItem>::const_iterator RecipeItemList::cbegin() const noexcept
 	{
 		return m_itemList.cbegin();
 	}
 
-	std::vector<RecipeItem>::const_iterator RecipeItemList::cend() const
+	std::vector<RecipeItem>::const_iterator RecipeItemList::cend() const noexcept
 	{
 		return m_itemList.cend();
+	}
+
+	std::vector<RecipeItem>::reverse_iterator RecipeItemList::rbegin() noexcept
+	{ 
+		return m_itemList.rbegin();
+	}
+
+	std::vector<RecipeItem>::reverse_iterator RecipeItemList::rend() noexcept
+	{ 
+		return m_itemList.rend();
 	}
 }

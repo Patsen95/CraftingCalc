@@ -46,20 +46,20 @@ namespace p95
 		return *_it;
 	}
 
-	const std::string RecipeItem::getDisplayId() const
+	const std::string RecipeItem::getItemName(size_t idx) const
 	{
-		std::string _str = *m_idSet.begin();
 		std::string _out = "";
-		size_t _idx = 0;
+		std::string _id = (idx == 0) ? *m_idSet.begin() : getId(idx);
+		size_t _cIdx = 0;
 		
-		for(char c : _str)
+		for(char c : _id)
 		{
-			if(_idx == 0)
+			if(_cIdx == 0)
 				c = std::toupper(c);
 			if(c == '_')
 				c = 32;
 			_out += c;
-			_idx++;
+			_cIdx++;
 		}
 		return _out;
 	}
@@ -67,6 +67,11 @@ namespace p95
 	const char RecipeItem::getKey() const
 	{
 		return m_key;
+	}
+
+	const size_t RecipeItem::altItemsCount() const
+	{
+		return m_idSet.size() - 1; // Subtracting first item
 	}
 
 	bool RecipeItem::hasKey() const

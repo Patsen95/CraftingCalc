@@ -24,17 +24,17 @@ namespace p95
 	}
 
 	/****************************************************************************/
-	Recipe::Recipe()
+	Recipe::Recipe() :
+		m_name(""),
+		m_outputItemName(""),
+		m_type(RecipeType::UNKNOWN),
+		m_cat(RecipeCategory::NONE),
+		m_outputCount(1)
 	{
 		m_raw.content = "";
 		m_raw.filename = "";
-		
-		m_name = "";
-		m_outputItemName = "";
-		m_type = RecipeType::UNKNOWN;
-		m_cat = RecipeCategory::NONE;
+
 		m_pattern.fill((char)32);		// Set all array to ASCII 32 (space character), 'cause it means an empty slot
-		m_outputCount = 1;
 	}
 
 	Recipe::~Recipe()
@@ -52,20 +52,28 @@ namespace p95
 		return m_outputItemName;
 	}
 
+	const size_t Recipe::getOutputItemCount() const
+	{
+		return m_outputCount;
+	}
+
 	const std::string Recipe::getDisplayName() const
 	{
 		std::string _str = m_name;
 		std::string _out = "";
 		size_t _idx = 0;
 
-		for(char c : _str)
+		if(!m_name.empty())
 		{
-			if(_idx == 0)
-				c = std::toupper(c);
-			if(c == '_')
-				c = 32;
-			_out += c;
-			_idx++;
+			for(char c : _str)
+			{
+				if(_idx == 0)
+					c = std::toupper(c);
+				if(c == '_')
+					c = 32;
+				_out += c;
+				_idx++;
+			}
 		}
 		return _out;
 	}
@@ -94,7 +102,7 @@ namespace p95
 	void Recipe::clear()
 	{
 		if(m_recipeReg.empty()) return;
-		LOG_DEBUG("[Recipe] Removed %d stored recipes", m_recipeReg.size());
+		LOG_DEBUG_T("Recipe", "Removed %d stored recipes", m_recipeReg.size());
 		m_recipeReg.clear();
 		std::vector<Recipe>().swap(m_recipeReg);
 	}
@@ -187,12 +195,12 @@ namespace p95
 	/****************************************************************************/
 	bool Recipe::operator==(const Recipe& other) const
 	{
-		// Recipes are equal ONLY if all conditions below are met:
-		// 1. Types are the same (e.g., both are shapeless or shaped)
-		// 2. Output item's equal
-		// 3. 
-		return (this->m_type == other.m_type);
-			//|| ;
+		// Recipes are equal when:
+		// 1. Have same types (e.g., both are shapeless or shaped)
+		// 2. Output items are equal - name and amount
+		return (this->m_type == other.m_type) 
+			&& (this->m_outputItemName == other.m_outputItemName) 
+			&& (this->m_outputCount == other.m_outputCount);
 	}
 
 	bool Recipe::operator!=(const Recipe& other) const
@@ -200,26 +208,4 @@ namespace p95
 		return !(this == &other);
 	}
 
-	/****************************************************************************/
-	void Recipe::print(const Recipe & recipe)
-	{
-		/*printf("Name: %s\nType: %s\nIngredients:\n", recipe.name.c_str(), getTypeName(recipe.type));
-
-		for(auto& ing : recipe.ingredients)
-			printf("  [%c] %s\n", ing.first, ing.second.c_str());
-
-		printf("Output item: %s\nCount: %d\n", recipe.outputItemName.c_str(), recipe.outputCount);
-
-		if(recipe.type == RecipeType::SHAPED)
-		{
-			printf("Pattern:\n");
-			for(int i = 0; i < 9; i++)
-			{
-				if(i % 3 == 0)
-					printf("\n");
-				printf(" %c ", recipe.pattern[i]);
-			}
-		}*/
-		printf("\n-------------------------------\n\n");
-	}
 }

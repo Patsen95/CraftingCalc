@@ -42,6 +42,7 @@ namespace p95
 	class Recipe
 	{
 	public:
+
 		struct Raw
 		{
 			std::string filename;
@@ -53,9 +54,10 @@ namespace p95
 		Recipe();
 		~Recipe();
 		
-		const std::string getName() const; // Raw name (Minecraft format)
+		const std::string getName() const; // Raw name (Minecraft format but without "minecraft" prefix)
 		const std::string getDisplayName() const;
 		const std::string getOutputItemName() const;
+		const size_t getOutputItemCount() const;
 		const RecipeType getType() const;
 		const RecipeCategory getCategory() const;
 		const std::array<char, 9>& getCraftingPattern() const;
@@ -75,10 +77,6 @@ namespace p95
 
 		bool operator==(const Recipe& other) const;
 		bool operator!=(const Recipe& other) const;
-
-	private:
-
-		static void print(const Recipe& recipe);
 
 	private:
 
