@@ -35,19 +35,20 @@ namespace p95
 			std::string message;
 		};
 
+	public:
 		/****************************************************************************/
-		static void init();
+		static void init(bool toConsole = true);
 		static void enable();
 		static void disable();
 
-		static void includeTimestamp(bool state = true);
-		static void useRelativeTimestamps(bool state = false);
-		static void loggingToConsole(bool state = true);
-		static void useTags(bool state = true);
+		static void includeTimestamp(bool state);
+		static void useRelativeTimestamps(bool state);
+		static void loggingToConsole(bool state);
+		static void useTags(bool state);
 		static void setGlobalTag(const char* tag);
-		static void useFiltering(bool state = true);
+		static void useFiltering(bool state);
 		static void setGlobalLogLevel(LogLevel level);
-		static void setMinLogLevel(LogLevel level = LogLevel::ERR);
+		static void setMinLogLevel(LogLevel level);
 
 		static void log(const char* fmt, ...);
 		static void log(const char* tag, const char* fmt, ...);
@@ -91,11 +92,11 @@ namespace p95
 #define LOG_TRACE(...)   (Logger::log(Logger::LogLevel::VERBOSE, "", __VA_ARGS__))
 
 
-#define _LOG_TAGGED_IMPL_(lvl, tag, ...) (Logger::log(lvl, tag, __VA_ARGS__))
+#define _LOG_TAGGED_(lvl, tag, ...) (Logger::log(lvl, tag, __VA_ARGS__))
 
-#define LOG_INFO_T(...)         _LOG_TAGGED_IMPL_(Logger::LogLevel::INFO, __VA_ARGS__)
-#define LOG_WARNING_T(tag, ...) _LOG_TAGGED_IMPL_(Logger::LogLevel::WARNING, tag, __VA_ARGS__)
-#define LOG_ERROR_T(tag, ...)   _LOG_TAGGED_IMPL_(Logger::LogLevel::ERR, tag, __VA_ARGS__)
-#define LOG_DEBUG_T(tag, ...)   _LOG_TAGGED_IMPL_(Logger::LogLevel::DEBUG, tag, __VA_ARGS__)
-#define LOG_TRACE_T(tag, ...)   _LOG_TAGGED_IMPL_(Logger::LogLevel::VERBOSE, tag, __VA_ARGS__)
+#define LOG_INFO_T(...)         _LOG_TAGGED_(Logger::LogLevel::INFO, __VA_ARGS__)
+#define LOG_WARNING_T(tag, ...) _LOG_TAGGED_(Logger::LogLevel::WARNING, tag, __VA_ARGS__)
+#define LOG_ERROR_T(tag, ...)   _LOG_TAGGED_(Logger::LogLevel::ERR, tag, __VA_ARGS__)
+#define LOG_DEBUG_T(tag, ...)   _LOG_TAGGED_(Logger::LogLevel::DEBUG, tag, __VA_ARGS__)
+#define LOG_TRACE_T(tag, ...)   _LOG_TAGGED_(Logger::LogLevel::VERBOSE, tag, __VA_ARGS__)
 }

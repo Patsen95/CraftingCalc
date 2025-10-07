@@ -18,21 +18,23 @@ namespace p95
 	//std::vector<Record> m_logBuffer;
 
 	/****************************************************************************/
-	void Logger::init()
+	void Logger::init(bool toConsole)
 	{
+		m_toConsole = toConsole;
 		enable();
 		m_startTime = time(NULL);
+		LOG_WARNING_T("Logger", "Initialized");
 	}
 
 	void Logger::enable()
 	{
 		m_enabled = true;
-		LOG_WARNING_T("LOGGER", "Logger enabled");
+		LOG_WARNING_T("Logger", "Enabled");
 	}
 
 	void Logger::disable()
 	{
-		LOG_WARNING_T("LOGGER", "Logger disabled");
+		LOG_WARNING_T("Logger", "Disabled");
 		m_enabled = false;
 	}
 
@@ -82,7 +84,6 @@ namespace p95
 		va_start(args, fmt);
 		_log(m_globalLvl, "", fmt, args);
 		va_end(args);
-		std::printf("\033[0m\n");
 	}
 
 	void Logger::log(const char* tag, const char* fmt, ...)
@@ -91,7 +92,6 @@ namespace p95
 		va_start(args, fmt);
 		_log(m_globalLvl, tag, fmt, args);
 		va_end(args);
-		std::printf("\033[0m\n");
 	}
 
 	void Logger::log(LogLevel lvl, const char* fmt, ...)
@@ -100,7 +100,6 @@ namespace p95
 		va_start(args, fmt);
 		_log(lvl, "", fmt, args);
 		va_end(args);
-		std::printf("\033[0m\n");
 	}
 
 	void Logger::log(LogLevel lvl, const char* tag, const char* fmt, ...)
@@ -109,7 +108,6 @@ namespace p95
 		va_start(args, fmt);
 		_log(lvl, tag, fmt, args);
 		va_end(args);
-		std::printf("\033[0m\n");
 	}
 
 	bool Logger::enabled()
@@ -163,6 +161,7 @@ namespace p95
 					std::printf("[%s] ", levelToStr(lvl));
 			}
 			std::vprintf(fmt, args);
+			std::printf("\033[0m\n");
 		}
 	}
 
